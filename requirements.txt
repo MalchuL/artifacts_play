@@ -1,0 +1,4 @@
+dynaconf
+pytest
+requests
+datamodel-code-generator
