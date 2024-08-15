@@ -1,3 +1,5 @@
 [default]
 api_host = "https://api.artifactsmmo.com"
-characters = ["PythonLover"]
+characters = ["AssetManager"]
+
+debug_modules = true

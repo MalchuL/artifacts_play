@@ -1,8 +1,9 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from enum import Enum
 
 from src.playground.crafting import CraftingRecipe
-from src.playground.item import Item
+from src.playground.inventory import Inventory
+from src.playground.item import Item, Items
 
 
 class ItemSlot(Enum):
@@ -22,9 +23,39 @@ class ItemSlot(Enum):
     CONSUMABLE2 = "consumable2"
 
 
-class Character:
+class Character(ABC):
     def __init__(self, name):
-        self.name = name
+        self._name = name
+
+    # Properties
+
+    @property
+    def name(self):  # Abstract getter
+        return self._name
+
+    @name.setter
+    def name(self, name):  # Abstract setter
+        self._name = name
+
+    @property
+    @abstractmethod
+    def inventory(self) -> Inventory:
+        pass
+
+    # Methods
+
+    @abstractmethod
+    def is_busy(self) -> bool:
+        pass
+
+    def wait_until_ready(self):
+        while self.is_busy():
+            continue
+
+    @property
+    @abstractmethod
+    def position(self) -> tuple:
+        pass
 
     @abstractmethod
     def move(self, x, y):
@@ -57,7 +88,7 @@ class Character:
         pass
 
     @abstractmethod
-    def deposit_item(self, item: Item, amount: int):
+    def deposit_item(self, item: Item, amount: int) -> Items:
         # Deposit an item in a bank on the character's map.
         pass
 

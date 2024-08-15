@@ -1,5 +1,5 @@
-from enum import StrEnum
+from enum import Enum
 
 
-class CraftingRecipe(StrEnum):
+class CraftingRecipe(Enum):
     pass

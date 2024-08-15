@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+
+
 class ItemType:
     WEAPON = 1
     EQUIPMENT = 2
@@ -6,6 +9,12 @@ class ItemType:
     BOOST = 5
 
 
+@dataclass
 class Item:
-    def __init__(self, type: ItemType):
-        self.type = type
+    code: str
+
+
+@dataclass
+class Items:
+    item: Item
+    quantity: int

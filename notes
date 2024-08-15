@@ -1,0 +1,13 @@
+one completion task gives 2 money (need more experiments)
+
+Fight
+xp for monster calculates by: (idk, but it decreases on each level
+
+Inventory
+When sums of quantity > inventory_max_items it will raise error
+
+Harvest
+Copper ore
+{1: 26,
+ 2: 18
+ }

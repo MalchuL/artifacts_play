@@ -1,4 +1,5 @@
 dynaconf
 pytest
 requests
+pydantinc
 datamodel-code-generator
