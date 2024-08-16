@@ -12,10 +12,10 @@ from pydantic import BaseModel, EmailStr, Field, conint, constr
 
 
 class AddAccountSchema(BaseModel):
-    username: constr(regex=r'^[a-zA-Z0-9_-]+$', min_length=6, max_length=32) = Field(
+    username: constr(pattern=r'^[a-zA-Z0-9_-]+$', min_length=6, max_length=32) = Field(
         ..., description='Your desired username.', title='Username'
     )
-    password: constr(regex=r'^[^\s]+$', min_length=5, max_length=50) = Field(
+    password: constr(pattern=r'^[^\s]+$', min_length=5, max_length=50) = Field(
         ..., description='Your password.', title='Password'
     )
     email: EmailStr = Field(..., description='Your email.', title='Email')
@@ -31,7 +31,7 @@ class Skin(Enum):
 
 
 class AddCharacterSchema(BaseModel):
-    name: constr(regex=r'^[a-zA-Z0-9_-]+$', min_length=3, max_length=12) = Field(
+    name: constr(pattern=r'^[a-zA-Z0-9_-]+$', min_length=3, max_length=12) = Field(
         ...,
         description="Your desired character name. It's unique and all players can see it.",
         title='Name',
@@ -61,7 +61,7 @@ class BlockedHitsSchema(BaseModel):
 
 
 class ChangePassword(BaseModel):
-    password: constr(regex=r'^[^\s]+$', min_length=5, max_length=50) = Field(
+    password: constr(pattern=r'^[^\s]+$', min_length=5, max_length=50) = Field(
         ..., description='Your password.', title='Password'
     )
 
@@ -112,7 +112,7 @@ class Skill(Enum):
 
 
 class CraftingSchema(BaseModel):
-    code: constr(regex=r'^[a-zA-Z0-9_-]+$') = Field(
+    code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Craft code.', title='Craft code'
     )
     quantity: Optional[conint(ge=1)] = Field(
@@ -121,7 +121,7 @@ class CraftingSchema(BaseModel):
 
 
 class DeleteCharacterSchema(BaseModel):
-    name: constr(regex=r'^[a-zA-Z0-9_-]+$', min_length=3, max_length=12) = Field(
+    name: constr(pattern=r'^[a-zA-Z0-9_-]+$', min_length=3, max_length=12) = Field(
         ..., description='Character name.', title='Name'
     )
 
@@ -138,7 +138,7 @@ class DestinationSchema(BaseModel):
 
 
 class DropRateSchema(BaseModel):
-    code: constr(regex=r'^[a-zA-Z0-9_-]+$') = Field(
+    code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Item code.', title='Item code'
     )
     rate: conint(ge=1) = Field(..., description='Chance rate.', title='Rate')
@@ -175,7 +175,7 @@ class Slot(Enum):
 
 
 class EquipSchema(BaseModel):
-    code: constr(regex=r'^[a-zA-Z0-9_-]+$') = Field(
+    code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Item code.', title='Code'
     )
     slot: Slot = Field(..., description='Item slot.', title='Slot')
@@ -221,7 +221,7 @@ class GEItemSchema(BaseModel):
 
 
 class GETransactionItemSchema(BaseModel):
-    code: constr(regex=r'^[a-zA-Z0-9_-]+$') = Field(
+    code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Item code.', title='Code'
     )
     quantity: conint(ge=1, le=50) = Field(
@@ -337,7 +337,7 @@ class RecyclingItemsSchema(BaseModel):
 
 
 class RecyclingSchema(BaseModel):
-    code: constr(regex=r'^[a-zA-Z0-9_-]+$') = Field(
+    code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Item code.', title='Item code'
     )
     quantity: Optional[conint(ge=1)] = Field(
@@ -378,7 +378,7 @@ class ResponseSchema(BaseModel):
 
 
 class SimpleItemSchema(BaseModel):
-    code: constr(regex=r'^[a-zA-Z0-9_-]+$') = Field(
+    code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Item code.', title='Code'
     )
     quantity: conint(ge=1) = Field(..., description='Item quantity.', title='Quantity')

@@ -1,5 +1,8 @@
-from enum import Enum
+from dataclasses import dataclass
+
+from src.playground.item import Item
 
 
-class CraftingRecipe(Enum):
-    pass
+@dataclass
+class CraftingRecipe:
+    item: Item

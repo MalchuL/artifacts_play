@@ -1,26 +1,16 @@
 from abc import abstractmethod, ABC
 from enum import Enum
 
+from src.playground.character_task import CharacterQuest
 from src.playground.crafting import CraftingRecipe
 from src.playground.inventory import Inventory
 from src.playground.item import Item, Items
 
 
-class ItemSlot(Enum):
-    WEAPON = "weapon"
-    SHIELD = "shield"
-    HELMET = "helmet"
-    BODY_ARMOR = "body_armor"
-    LEG_ARMOR = "leg_armor"
-    BOOTS = "boots"
-    RING1 = "ring1"
-    RING2 = "ring2"
-    AMULET = "amulet"
-    ARTIFACT1 = "artifact1"
-    ARTIFACT2 = "artifact2"
-    ARTIFACT3 = "artifact3"
-    CONSUMABLE = "consumable1"
-    CONSUMABLE2 = "consumable2"
+class FightResult(Enum):
+    WIN = 1
+    LOSE = 2
+    DRAW = 3
 
 
 class Character(ABC):
@@ -42,6 +32,10 @@ class Character(ABC):
     def inventory(self) -> Inventory:
         pass
 
+    @property
+    @abstractmethod
+    def character_quest(self) -> CharacterQuest:
+        pass
     # Methods
 
     @abstractmethod
@@ -63,17 +57,7 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def equip_item(self, item: Item, item_slot: ItemSlot):
-        # Equip an item on your character.
-        pass
-
-    @abstractmethod
-    def unequip_item(self, item_slot: ItemSlot):
-        # Unequip an item on your character.
-        pass
-
-    @abstractmethod
-    def fight(self):
+    def fight(self) -> FightResult:
         # Start a fight against a monster on the character's map.
         pass
 
@@ -88,19 +72,19 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def deposit_item(self, item: Item, amount: int) -> Items:
+    def recycle(self, item: Item, amount: int):
+        # Recycling an item. The character must be on a map with a workshop (only for equipments
+        # and weapons).
+        pass
+
+    @abstractmethod
+    def deposit_item(self, item: Item, amount: int):
         # Deposit an item in a bank on the character's map.
         pass
 
     @abstractmethod
     def deposit_gold(self, amount: int):
         # Deposit golds in a bank on the character's map.
-        pass
-
-    @abstractmethod
-    def recycle(self, item: Item, amount: int):
-        # Recycling an item. The character must be on a map with a workshop (only for equipments
-        # and weapons).
         pass
 
     @abstractmethod
@@ -114,26 +98,12 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def grand_exchange_buy_item(self, item: Item, amount: int):
+    def grand_exchange_buy_item(self, item: Item, amount: int, price: int):
         # Buy an item at the Grand Exchange on the character's map.
         pass
 
     @abstractmethod
-    def grand_exchange_sell_item(self, item: Item, amount: int):
+    def grand_exchange_sell_item(self, item: Item, amount: int, price: int):
         # Sell an item at the Grand Exchange on the character's map.
         pass
 
-    @abstractmethod
-    def accept_new_task(self):
-        # Accepting a new task.
-        pass
-
-    @abstractmethod
-    def complete_task(self):
-        # Completing a task.
-        pass
-
-    @abstractmethod
-    def delete_item(self, item: Item):
-        # Deleting an item from your inventory.
-        pass

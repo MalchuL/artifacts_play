@@ -6,7 +6,7 @@ from dynaconf import settings
 import pprint
 
 from src.playground.character import Character
-from src.playground.remote.openapi_client.artifacts_api_client import AuthenticatedClient
+from src.playground.characters.remote.openapi_client.artifacts_api_client import AuthenticatedClient
 from src.playground.remote.rest_api_character import RestApiCharacter
 
 logger = logging.getLogger(__name__)

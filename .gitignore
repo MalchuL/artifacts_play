@@ -132,5 +132,5 @@ dmypy.json
 .github/templates/*
 
 # OpenAPI client
-src/playground/remote/openapi_client/*
-!src/playground/remote/openapi_client/.gitignore
+src/playground/characters/remote/openapi_client/*
+!src/playground/characters/remote/openapi_client/.gitignore

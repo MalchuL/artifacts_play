@@ -6,6 +6,9 @@ for openapi you should generate schema file
 
 You can find openapi specifications here https://api.artifactsmmo.com/docs/#/
 `datamodel-codegen --input openapi_schema.json --input-file-type openapi --output model.py`
+!! Replace all `regex` occurrences to `pattern` !!!
+
+And if you are using PyCharm, install pydantic plugin https://plugins.jetbrains.com/plugin/12861-pydantic
 Generated file should be pasted into `src/playground/remote/model.py`
 
 # Generate ready requests as python code from OpenAPI3

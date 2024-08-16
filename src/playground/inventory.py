@@ -1,61 +1,91 @@
 import copy
-from typing import Dict
+from abc import abstractmethod, ABC
+from enum import Enum
+from typing import Dict, List, Optional
 
-from src.playground.errors import CharacterInventoryFullException, UnspecifiedException
+from src.errors import CharacterInventoryFullException
 from src.playground.item import Item, Items
 
 
-class Inventory:
-    def __init__(self, capacity: int, max_inventory_size: int):
-        self._items: Dict[str, Items] = {}
-        self.max_inventory_size = max_inventory_size
-        self.capacity = capacity
+class ItemSlot(Enum):
+    WEAPON = "weapon"
+    SHIELD = "shield"
+    HELMET = "helmet"
+    BODY_ARMOR = "body_armor"
+    LEG_ARMOR = "leg_armor"
+    BOOTS = "boots"
+    RING1 = "ring1"
+    RING2 = "ring2"
+    AMULET = "amulet"
+    ARTIFACT1 = "artifact1"
+    ARTIFACT2 = "artifact2"
+    ARTIFACT3 = "artifact3"
+    CONSUMABLE = "consumable1"
+    CONSUMABLE2 = "consumable2"
 
-    def get_items_quantity(self):
+
+class Inventory(ABC):
+
+    @property
+    @abstractmethod
+    def items(self) -> List[Items]:
+        pass
+
+    @property
+    @abstractmethod
+    def equipment(self) -> Dict[ItemSlot, Optional[Item]]:
+        pass
+
+    @property
+    @abstractmethod
+    def max_inventory_amount(self) -> int:
+        """
+        Amount of all items
+        :return int:
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def capacity(self) -> int:
+        """
+        Max inventory slots
+        :return int:
+        """
+        pass
+
+    @abstractmethod
+    def equip_item(self, item: Item, item_slot: ItemSlot):
+        # Equip an item on your character.
+        pass
+
+    @abstractmethod
+    def unequip_item(self, item_slot: ItemSlot):
+        # Unequip an item on your character.
+        pass
+
+    @abstractmethod
+    def delete_item(self, item: Item, amount: int):
+        # Deleting an item from your inventory.
+        pass
+
+    def get_items_amount(self):
         quantity = 0
-        for item in self._items.values():
+        for item in self.items:
             quantity += item.quantity
         return quantity
 
     def is_possible_to_add_item(self, item: Item, added_quantity: int):
-        new_items_len = len(self._items)
-        if item.code in self._items:
+        inventory_items = self.items
+        new_items_len = len(inventory_items)
+        if item.code in inventory_items:
             new_items_len += 1
-        new_quantity = self.get_items_quantity() + added_quantity
-        return new_items_len <= self.capacity and new_quantity <= self.max_inventory_size
+        new_quantity = self.get_items_amount() + added_quantity
+        return new_items_len <= self.capacity and new_quantity <= self.max_inventory_amount
 
     def is_inventory_full(self):
-        return len(self._items) == self.capacity or \
-            self.get_items_quantity() == self.max_inventory_size
-
-    def add_item(self, items: Items):
-        if items.quantity <= 0:
-            raise ValueError("Items quantity must be greater than 0.")
-        if not self.is_possible_to_add_item(items.item, items.quantity):
-            raise CharacterInventoryFullException("Character inventory is full.")
-        item_code = items.item.code
-        if item_code in self._items:
-            self._items[item_code].quantity += items.quantity
-        else:
-            self._items[item_code] = copy.deepcopy(items)
-
-    def take_items(self, item: Item, amount: int) -> Items:
-        if item.code in self._items and self._items[item.code].quantity <= amount and amount > 0:
-            items = Items(item, amount)
-            self._items[item.code].quantity -= amount
-            if self._items[item.code].quantity <= 0:
-                del self._items[item.code]
-            return items
-        else:
-            raise UnspecifiedException()  # TODO specify exception
-
-    def get_items(self) -> Dict[str, Items]:
-        return copy.deepcopy(self._items)
-
-    def clear(self):
-        items = self._items
-        self._items = {}
-        return items
+        return len(self.items) == self.capacity or \
+            self.get_items_amount() == self.max_inventory_amount
 
     def __repr__(self):
-        return f"Inventory(capacity={self.capacity}, max_inventory_size={self.max_inventory_size}, items={list(self._items.values())})"
+        return f"Inventory(capacity={self.capacity}, max_inventory_size={self.capacity}, items={self.items})"
