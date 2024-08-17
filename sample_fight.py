@@ -4,7 +4,7 @@ import time
 
 from dynaconf import settings
 
-from src.playground.character import Character
+from src.playground.characters.character import Character
 from src.playground.characters.remote.rest_api_character import RestApiCharacter
 from src.rest_api_client.client import AuthenticatedClient
 

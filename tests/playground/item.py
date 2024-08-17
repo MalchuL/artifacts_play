@@ -1,4 +1,4 @@
-from src.playground.item import Item, ItemType
+from src.playground.items.item import Item, ItemType
 
 
 def test_item():

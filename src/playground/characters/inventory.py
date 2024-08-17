@@ -1,10 +1,8 @@
-import copy
 from abc import abstractmethod, ABC
 from enum import Enum
 from typing import Dict, List, Optional
 
-from src.errors import CharacterInventoryFullException
-from src.playground.item import Item, Items
+from src.playground.items.item import Item, Items
 
 
 class ItemSlot(Enum):

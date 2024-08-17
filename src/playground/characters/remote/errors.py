@@ -1,11 +1,11 @@
-from src.errors import LocationNotFoundOnMapException, CharacterInCooldownException, \
+from src.playground.errors import LocationNotFoundOnMapException, CharacterInCooldownException, \
     CharacterNotFoundException, CharacterInventoryFullException, \
     CharacterLevelIsInsufficientException, HigherSkillLevelRequired, InsufficientGoldsOnCharacter, \
     SlotIsNotEmptyException, CharacterAlreadyAtDestinationException, \
     CharacterAlreadyHasATaskException, CharacterHasNotCompletedTheTaskException, \
     ActionInProgressException, ItemAlreadyEquippedException, NoItemAtThisPriceException, \
     MissingItemOrInsufficientQuantityException, ItemCannotBeRecycleException, \
-    TransactionAlreadyInProgress, NotFoundException, ArtifactsException
+    TransactionAlreadyInProgress, NotFoundException
 from src.rest_api_client.errors import ArtifactsHTTPStatusError
 
 CHARACTER_STATUS_CODE_TO_EXCEPTION = {404: NotFoundException,

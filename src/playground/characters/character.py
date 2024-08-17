@@ -1,11 +1,11 @@
 from abc import abstractmethod, ABC
 from enum import Enum
 
-from src.playground.character_stats import CharacterStats
-from src.playground.character_task import CharacterQuest
-from src.playground.crafting import CraftingRecipe
-from src.playground.inventory import Inventory
-from src.playground.item import Item, Items
+from src.playground.characters.character_stats import CharacterStats
+from src.playground.characters.character_task import CharacterQuest
+from src.playground.items.crafting import CraftingRecipe
+from src.playground.characters.inventory import Inventory
+from src.playground.items.item import Item
 
 
 class FightResult(Enum):

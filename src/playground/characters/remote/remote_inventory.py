@@ -3,8 +3,8 @@ from typing import Optional, List, Dict
 
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
-from src.playground.inventory import Inventory, ItemSlot
-from src.playground.item import Item, Items
+from src.playground.characters.inventory import Inventory, ItemSlot
+from src.playground.items.item import Item, Items
 from src.rest_api_client.api.my_characters import ActionEquipItem, ActionDeleteItem, \
     ActionUnequipItem
 from src.rest_api_client.client import AuthenticatedClient

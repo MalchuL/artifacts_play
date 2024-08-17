@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.playground.item import Item
+from src.playground.items.item import Item
 
 
 @dataclass

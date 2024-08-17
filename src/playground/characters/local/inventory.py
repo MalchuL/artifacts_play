@@ -1,9 +1,9 @@
 import copy
 from typing import Dict
 
-from src.errors import CharacterInventoryFullException
-from src.playground.inventory import Inventory
-from src.playground.item import Item, Items
+from src.playground.errors import CharacterInventoryFullException
+from src.playground.characters.inventory import Inventory
+from src.playground.items.item import Item, Items
 
 
 class LocalInventory(Inventory):

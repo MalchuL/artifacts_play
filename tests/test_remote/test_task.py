@@ -3,8 +3,7 @@ import logging
 import pytest
 from dynaconf import settings
 
-from src.errors import CharacterAlreadyHasATaskException
-from src.playground.character import Character
+from src.playground.characters.character import Character
 from src.playground.characters.remote.rest_api_character import RestApiCharacter
 from src.rest_api_client.client import AuthenticatedClient
 

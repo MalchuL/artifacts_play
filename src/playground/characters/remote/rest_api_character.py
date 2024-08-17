@@ -1,31 +1,30 @@
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Union, Optional
+from typing import Union
 
 from dateutil.parser import parse as datetime_parser
 
-from src.errors import CharacterInventoryFullException
-from src.playground.character import Character
-from src.playground.character_stats import CharacterStats, Level, Skills, SkillLevel, Attack, \
+from src.playground.errors import CharacterInventoryFullException
+from src.playground.characters.character import Character
+from src.playground.characters.character_stats import CharacterStats, Level, Skills, SkillLevel, Attack, \
     Resistance, PercentDamage
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
 from src.playground.characters.remote.remote_inventory import RemoteInventory
 from src.playground.characters.remote.remote_quest import RemoteCharacterQuest
-from src.playground.crafting import CraftingRecipe
-from src.playground.item import Item
+from src.playground.items.crafting import CraftingRecipe
+from src.playground.items.item import Item
 from src.rest_api_client.api.characters import GetCharacter
 from src.rest_api_client.api.my_characters import ActionMove, ActionFight, ActionGathering, \
-    ActionDepositBank, ActionAcceptNewTask, ActionCrafting, ActionDepositBankGold, ActionRecycling, \
-    ActionWithdrawBank, ActionWithdrawBankGold, ActionGeBuyItem, ActionGeSellItem, \
-    ActionCompleteTask, ActionTaskExchange
+    ActionDepositBank, ActionCrafting, ActionDepositBankGold, ActionRecycling, \
+    ActionWithdrawBank, ActionWithdrawBankGold, ActionGeBuyItem, ActionGeSellItem
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import CharacterSchema, CharacterMovementResponseSchema, \
     DestinationSchema, CharacterFightResponseSchema, SkillResponseSchema, SimpleItemSchema, \
-    ActionItemBankResponseSchema, TaskResponseSchema, CraftingSchema, GoldResponseSchema, \
+    ActionItemBankResponseSchema, CraftingSchema, GoldResponseSchema, \
     DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
-    GETransactionResponseSchema, GETransactionItemSchema, TaskRewardResponseSchema
+    GETransactionResponseSchema, GETransactionItemSchema
 
 logger = logging.getLogger(__name__)
 

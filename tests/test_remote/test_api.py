@@ -1,11 +1,9 @@
 import logging
-import time
 
 import pytest
 from dynaconf import settings
-import pprint
 
-from src.playground.character import Character
+from src.playground.characters.character import Character
 from src.playground.characters.remote.openapi_client.artifacts_api_client import AuthenticatedClient
 from src.playground.remote.rest_api_character import RestApiCharacter
 

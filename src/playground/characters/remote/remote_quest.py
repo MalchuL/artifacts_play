@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from src.playground.character_task import CharacterQuest, CharTask, TaskType
+from src.playground.characters.character_task import CharacterQuest, CharTask, TaskType
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
 from src.rest_api_client.api.my_characters import ActionAcceptNewTask, ActionCompleteTask, \
