@@ -1,5 +1,5 @@
 [default]
 api_host = "https://api.artifactsmmo.com"
-characters = ["AssetManager"]
+characters = ["Podtekatel"]
 
 debug_modules = true

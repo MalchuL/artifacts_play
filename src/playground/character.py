@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABC
 from enum import Enum
 
+from src.playground.character_stats import CharacterStats
 from src.playground.character_task import CharacterQuest
 from src.playground.crafting import CraftingRecipe
 from src.playground.inventory import Inventory
@@ -36,6 +37,12 @@ class Character(ABC):
     @abstractmethod
     def character_quest(self) -> CharacterQuest:
         pass
+
+    @property
+    @abstractmethod
+    def stats(self) -> CharacterStats:
+        pass
+
     # Methods
 
     @abstractmethod

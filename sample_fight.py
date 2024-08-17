@@ -29,6 +29,7 @@ if __name__ == '__main__':
     character: Character = RestApiCharacter(char_name, client=client)
     print("items", character.inventory.items)
     print("equip" ,character.inventory.equipment)
+    print("stats" ,character.stats)
     character.wait_until_ready()
     task_pos = task_position[cur_action]
     if tuple(character.position) != tuple(task_pos):

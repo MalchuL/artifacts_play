@@ -89,21 +89,3 @@ class CharacterHasNotCompletedTheTaskException(ArtifactsException):
     ERROR_MESSAGE = "Character has not completed the task."
 
 
-STATUS_CODE_TO_EXCEPTION = {404: NotFoundException,
-                            461: TransactionAlreadyInProgress,
-                            473: ItemCannotBeRecycleException,
-                            478: MissingItemOrInsufficientQuantityException,
-                            482: NoItemAtThisPriceException,
-                            485: ItemAlreadyEquippedException,
-                            486: ActionInProgressException,
-                            488: CharacterHasNotCompletedTheTaskException,
-                            489: CharacterAlreadyHasATaskException,
-                            490: CharacterAlreadyAtDestinationException,
-                            491: SlotIsNotEmptyException,
-                            492: InsufficientGoldsOnCharacter,
-                            493: HigherSkillLevelRequired,
-                            496: CharacterLevelIsInsufficientException,
-                            497: CharacterInventoryFullException,
-                            498: CharacterNotFoundException,
-                            499: CharacterInCooldownException,
-                            598: LocationNotFoundOnMapException}
