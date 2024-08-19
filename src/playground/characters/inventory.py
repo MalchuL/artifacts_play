@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from src.playground.items.item import Item, Items
 
 
-class ItemSlot(Enum):
+class EquipmentSlot(Enum):
     WEAPON = "weapon"
     SHIELD = "shield"
     HELMET = "helmet"
@@ -31,7 +31,7 @@ class Inventory(ABC):
 
     @property
     @abstractmethod
-    def equipment(self) -> Dict[ItemSlot, Optional[Item]]:
+    def equipment(self) -> Dict[EquipmentSlot, Optional[Item]]:
         pass
 
     @property
@@ -53,12 +53,12 @@ class Inventory(ABC):
         pass
 
     @abstractmethod
-    def equip_item(self, item: Item, item_slot: ItemSlot):
+    def equip_item(self, item: Item, item_slot: EquipmentSlot):
         # Equip an item on your character.
         pass
 
     @abstractmethod
-    def unequip_item(self, item_slot: ItemSlot):
+    def unequip_item(self, item_slot: EquipmentSlot):
         # Unequip an item on your character.
         pass
 

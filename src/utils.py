@@ -1,10 +1,10 @@
 MOVING_COOLDOWN = 5  # seconds
 
 
-def estimate_moving_time(x_start, y_start, x_end, y_end, cooldown=MOVING_COOLDOWN):
+def estimate_moving_time(x_start, y_start, x_end, y_end):
     """Estimate the time it takes to move from (x_start, y_start) to (x_end, y_end) Calculated
     using the formula based on empirical data."""
-    return (abs(x_end - x_start) + abs(y_end - y_start)) * cooldown
+    return abs(x_end - x_start) + abs(y_end - y_start)
 
 
 def calculate_win_probability():

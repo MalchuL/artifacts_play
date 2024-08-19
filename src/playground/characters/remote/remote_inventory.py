@@ -3,7 +3,7 @@ from typing import Optional, List, Dict
 
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
-from src.playground.characters.inventory import Inventory, ItemSlot
+from src.playground.characters.inventory import Inventory, EquipmentSlot
 from src.playground.items.item import Item, Items
 from src.rest_api_client.api.my_characters import ActionEquipItem, ActionDeleteItem, \
     ActionUnequipItem
@@ -19,7 +19,7 @@ class RemoteInventory(Inventory):
         self.__state = char_message
 
     @property
-    def equipment(self) -> Dict[ItemSlot, Optional[Item]]:
+    def equipment(self) -> Dict[EquipmentSlot, Optional[Item]]:
         state = self._state
         equipment = {}
         for slot in Slot:
@@ -28,7 +28,7 @@ class RemoteInventory(Inventory):
                 item = Item(code=item_code)
             else:
                 item = None
-            equipment[ItemSlot(slot.value)] = item
+            equipment[EquipmentSlot(slot.value)] = item
         return equipment
 
     @property
@@ -64,7 +64,7 @@ class RemoteInventory(Inventory):
         return len(self._state.inventory)
 
     @char_exception_handler
-    def equip_item(self, item: Item, item_slot: ItemSlot):
+    def equip_item(self, item: Item, item_slot: EquipmentSlot):
         equip = EquipSchema(code=item.code, slot=Slot(item_slot.value))
         equip_call = ActionEquipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = equip_call(equip)
@@ -72,7 +72,7 @@ class RemoteInventory(Inventory):
         logger.info(f"Equip results: {result.data.slot}, {result.data.item}")
 
     @char_exception_handler
-    def unequip_item(self, item_slot: ItemSlot):
+    def unequip_item(self, item_slot: EquipmentSlot):
         unequip = UnequipSchema(slot=Slot(item_slot.value))
         unequip_call = ActionUnequipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = unequip_call(unequip)

@@ -31,7 +31,7 @@ CHARACTER_STATUS_CODE_TO_EXCEPTION = {404: NotFoundException,
 def char_exception_handler(func):
     def wrapper(*args, **kwargs):
         try:
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         except ArtifactsHTTPStatusError as e:
             if e.status_code in CHARACTER_STATUS_CODE_TO_EXCEPTION:
                 new_error = CHARACTER_STATUS_CODE_TO_EXCEPTION[e.status_code]

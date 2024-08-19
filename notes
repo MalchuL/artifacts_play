@@ -11,3 +11,13 @@ Copper ore
 {1: 26,
  2: 18
  }
+
+
+Notes
+items has type
+
+effect_types
+HASTE = "haste"
+HP = "hp"
+
+boost_dmg_air

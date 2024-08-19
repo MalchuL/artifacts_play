@@ -3,7 +3,6 @@ from enum import Enum
 
 from src.playground.characters.character_stats import CharacterStats
 from src.playground.characters.character_task import CharacterQuest
-from src.playground.items.crafting import CraftingRecipe
 from src.playground.characters.inventory import Inventory
 from src.playground.items.item import Item
 
@@ -74,7 +73,7 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def craft(self, recipe: CraftingRecipe, amount: int):
+    def craft(self, recipe: Item, amount: int):
         # Crafting an item. The character must be on a map with a workshop.
         pass
 

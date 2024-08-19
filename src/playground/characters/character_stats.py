@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from enum import Enum
 
 
-@dataclass
+@dataclass(frozen=True)
 class Level:
     level: int
     xp: int
@@ -9,7 +10,7 @@ class Level:
     total_xp: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class Attack:
     earth: int
     water: int
@@ -17,7 +18,7 @@ class Attack:
     air: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class Resistance:
     earth: int
     water: int
@@ -25,7 +26,7 @@ class Resistance:
     air: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class PercentDamage:
     earth: int
     water: int
@@ -33,31 +34,45 @@ class PercentDamage:
     air: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class SkillLevel:
     level: int
     xp: int
     max_xp: int
 
 
-@dataclass
+class SkillType(Enum):
+    WOODCUTTING = "woodcutting"
+    FISHING = "fishing"
+    MINING = "mining"
+    COOKING = "cooking"
+    WEAPON_CRAFTING = "weaponcrafting"
+    GEAR_CRAFTING = "gearcrafting"
+    JEWERLY_CRAFTING = "jewelrycrafting"
+
+
+@dataclass(frozen=True)
 class Skills:
     woodcutting: SkillLevel
+    mining: SkillLevel
     fishing: SkillLevel
     cooking: SkillLevel
-    weapon_crafting: SkillLevel
-    gear_crafting: SkillLevel
-    jewelry_crafting: SkillLevel
+    weaponcrafting: SkillLevel
+    gearcrafting: SkillLevel
+    jewelrycrafting: SkillLevel
 
 
-@dataclass
-class CharacterStats:
+@dataclass(frozen=True)
+class Stats:
     hp: int
+    attack: Attack
+    resistance: Resistance
+
+@dataclass(frozen=True)
+class CharacterStats(Stats):
     gold: int
     speed: int
     haste: int
-    char_level: Level
+    level: Level
     skills: Skills
-    attack: Attack
-    resistance: Resistance
     perc_damage: PercentDamage

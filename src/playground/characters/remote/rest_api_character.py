@@ -6,14 +6,13 @@ from typing import Union
 from dateutil.parser import parse as datetime_parser
 
 from src.playground.errors import CharacterInventoryFullException
-from src.playground.characters.character import Character
+from src.playground.characters.character import Character, FightResult
 from src.playground.characters.character_stats import CharacterStats, Level, Skills, SkillLevel, Attack, \
     Resistance, PercentDamage
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
 from src.playground.characters.remote.remote_inventory import RemoteInventory
 from src.playground.characters.remote.remote_quest import RemoteCharacterQuest
-from src.playground.items.crafting import CraftingRecipe
 from src.playground.items.item import Item
 from src.rest_api_client.api.characters import GetCharacter
 from src.rest_api_client.api.my_characters import ActionMove, ActionFight, ActionGathering, \
@@ -24,7 +23,7 @@ from src.rest_api_client.model import CharacterSchema, CharacterMovementResponse
     DestinationSchema, CharacterFightResponseSchema, SkillResponseSchema, SimpleItemSchema, \
     ActionItemBankResponseSchema, CraftingSchema, GoldResponseSchema, \
     DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
-    GETransactionResponseSchema, GETransactionItemSchema
+    GETransactionResponseSchema, GETransactionItemSchema, Result
 
 logger = logging.getLogger(__name__)
 
@@ -86,10 +85,10 @@ class RestApiCharacter(Character):
                               gold=state.gold,
                               speed=state.speed,
                               haste=state.haste,
-                              char_level=Level(level=state.level,
-                                               xp=state.xp,
-                                               max_xp=state.max_xp,
-                                               total_xp=state.total_xp),
+                              level=Level(level=state.level,
+                                          xp=state.xp,
+                                          max_xp=state.max_xp,
+                                          total_xp=state.total_xp),
                               attack=Attack(earth=state.attack_earth,
                                             water=state.attack_water,
                                             fire=state.attack_fire,
@@ -105,21 +104,24 @@ class RestApiCharacter(Character):
                               skills=Skills(woodcutting=SkillLevel(level=state.woodcutting_level,
                                                                    xp=state.woodcutting_xp,
                                                                    max_xp=state.woodcutting_max_xp),
+                                            mining=SkillLevel(level=state.mining_level,
+                                                                   xp=state.mining_xp,
+                                                                   max_xp=state.mining_max_xp),
                                             cooking=SkillLevel(level=state.cooking_level,
                                                                xp=state.cooking_xp,
                                                                max_xp=state.cooking_max_xp),
                                             fishing=SkillLevel(level=state.fishing_level,
                                                                xp=state.fishing_xp,
                                                                max_xp=state.fishing_max_xp),
-                                            weapon_crafting=SkillLevel(
+                                            weaponcrafting=SkillLevel(
                                                 level=state.weaponcrafting_level,
                                                 xp=state.weaponcrafting_xp,
                                                 max_xp=state.weaponcrafting_max_xp),
-                                            gear_crafting=SkillLevel(
+                                            gearcrafting=SkillLevel(
                                                 level=state.gearcrafting_level,
                                                 xp=state.gearcrafting_xp,
                                                 max_xp=state.gearcrafting_max_xp),
-                                            jewelry_crafting=SkillLevel(
+                                            jewelrycrafting=SkillLevel(
                                                 level=state.jewelrycrafting_level,
                                                 xp=state.jewelrycrafting_xp,
                                                 max_xp=state.jewelrycrafting_max_xp)))
@@ -149,10 +151,12 @@ class RestApiCharacter(Character):
         logger.info("Move results " + str(result.data.destination))
 
     @char_exception_handler
-    def fight(self):
+    def fight(self) -> FightResult:
         result: CharacterFightResponseSchema = ActionFight(name=self.name, client=self._client)()
         self._state = result.data.character
         logger.info("Fight results " + str(result.data.fight))
+        fight_result = FightResult.WIN if result.data.fight.result == Result.win else FightResult.LOSE
+        return fight_result
 
     @char_exception_handler
     def harvest(self):
@@ -163,8 +167,8 @@ class RestApiCharacter(Character):
         logger.info("Harvest results " + str(result.data.details))
 
     @char_exception_handler
-    def craft(self, recipe: CraftingRecipe, amount: int):
-        crafting_schema = CraftingSchema(code=recipe.item.code, quantity=amount)
+    def craft(self, recipe: Item, amount: int):
+        crafting_schema = CraftingSchema(code=recipe.code, quantity=amount)
         crafting_call = ActionCrafting(name=self.name, client=self._client)
         result: SkillResponseSchema = crafting_call(crafting_schema)
         self._state = result.data.character

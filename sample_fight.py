@@ -58,6 +58,8 @@ if __name__ == '__main__':
             character.wait_until_ready()
             if character.character_quest.get_current_task() is not None:
                 character.character_quest.complete_task()
+                character.wait_until_ready()
+
             character.character_quest.accept_new_task()
             character.wait_until_ready()
 
@@ -66,7 +68,7 @@ if __name__ == '__main__':
 
         try:
             if cur_action == "fight":
-                character.fight()
+                print("fight results", character.fight())
                 character.wait_until_ready()
             elif cur_action == "harvest":
                 character.harvest()
