@@ -1,12 +1,12 @@
 from abc import abstractmethod
-from typing import Dict, Optional
+from typing import Optional, List
 
 from src.playground.items.item import Items, Item
 
 
 class Bank:
     @abstractmethod
-    def get_bank_items(self) -> Dict[str, Items]:
+    def get_bank_items(self) -> List[Items]:
         pass
 
     @abstractmethod

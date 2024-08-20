@@ -1,13 +1,13 @@
-from typing import List
+from typing import List, Optional
 
 from luigi.freezing import recursively_unfreeze
 from pydantic import TypeAdapter
 
 from src.playground.items import Items, Item
 
-ItemsAdapter = TypeAdapter(Items)
-ListItemsAdapter = TypeAdapter(List[Items])
-ListItemAdapter = TypeAdapter(List[Item])
+ItemsAdapter = TypeAdapter(Optional[Items])
+ListItemsAdapter = TypeAdapter(Optional[List[Items]])
+ListItemAdapter = TypeAdapter(Optional[List[Item]])
 
 
 def from_json(obj, adapter):

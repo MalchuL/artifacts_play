@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from src.playground.bank.bank import Bank
 
@@ -23,7 +23,7 @@ class RestApiBank(Bank):
     def __parse_items(self, schema: SimpleItemSchema) -> Items:
         return Items(Item(schema.code), quantity=schema.quantity)
 
-    def get_bank_items(self) -> Dict[str, Items]:
+    def get_bank_items(self) -> List[Items]:
         date_page_items: DataPageSimpleItemSchema = GetBankItems(page=1, client=self._client)()
         total_pages = date_page_items.pages
         schemas: List[SimpleItemSchema] = list(date_page_items.data)
@@ -42,7 +42,7 @@ class RestApiBank(Bank):
                     f" for object. they are equal={items[parsed_item.item.code] == parsed_item}")
             items[parsed_item.item.code] = parsed_item
 
-        return items
+        return list(items.values())
 
     def get_bank_item(self, item: Item) -> Optional[Items]:
         try:

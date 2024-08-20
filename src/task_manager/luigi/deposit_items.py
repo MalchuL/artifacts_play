@@ -1,31 +1,24 @@
-import os
-from datetime import datetime
 from typing import List
 
 import luigi
-from dynaconf import settings
 
-from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Items
 from src.playground.utilites.map_finder import MapFinder, BuildingType
 from src.task_manager.luigi.adapters import ListItemsAdapter, from_json
-from src.task_manager.luigi.state import get_world
+from src.task_manager.luigi.character_task import CharacterTask
 
 
-class BankTask(luigi.Task):
+class BankTask(CharacterTask):
     deposit_items: ListItemsAdapter = luigi.OptionalListParameter(default=None)
     deposit_gold: int = luigi.IntParameter(default=0)
+
     deposit_all_items: bool = luigi.BoolParameter(default=False)
 
     withdraw_items: ListItemsAdapter = luigi.OptionalListParameter(default=None)
     withdraw_gold: int = luigi.IntParameter(default=0)
 
-    char_name: str = luigi.Parameter()
-    datetime = luigi.DateSecondParameter(default=datetime.now(), interval=1)
-
-
     def run(self):
-        world = get_world()
+        world = self.world
         map_finder = MapFinder(world)
         bank_location = map_finder.find_building(BuildingType.BANK)[0]
         character = world.get_character(self.char_name)
@@ -54,10 +47,8 @@ class BankTask(luigi.Task):
             character.wait_until_ready()
 
         with self.output().open("w") as f:
-            f.write(f"{self.deposit_items}, {self.deposit_gold}, {self.deposit_all_items}, {self.withdraw_items}, {self.withdraw_gold}")
-
-    def output(self):
-        return luigi.LocalTarget(
-            os.path.join(settings.TASK_OUT_DIRECTORY,
-                         f"{self.__class__.__name__}_{self.char_name}_{self.datetime}.txt"))
-
+            f.write(f"deposit_items={self.deposit_items}\n"
+                    f"deposit_gold={self.deposit_gold}\n"
+                    f"deposit_all_items={self.deposit_all_items}\n"
+                    f"withdraw_items={self.withdraw_items}\n"
+                    f"withdraw_gold={self.withdraw_gold}")

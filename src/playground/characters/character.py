@@ -1,16 +1,24 @@
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
 from enum import Enum
+from typing import List
 
 from src.playground.characters.character_stats import CharacterStats
 from src.playground.characters.character_task import CharacterQuest
 from src.playground.characters.inventory import Inventory
-from src.playground.items.item import Item
+from src.playground.items.item import Item, Items
 
 
-class FightResult(Enum):
+class Result(Enum):
     WIN = 1
     LOSE = 2
     DRAW = 3
+
+
+@dataclass
+class FightResult:
+    drops: List[Items]
+    result: Result
 
 
 class Character(ABC):

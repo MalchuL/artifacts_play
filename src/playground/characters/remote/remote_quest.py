@@ -36,7 +36,7 @@ class RemoteCharacterQuest(CharacterQuest):
     def accept_new_task(self) -> CharTask:
         result: TaskResponseSchema = ActionAcceptNewTask(self.name, client=self._client)()
         self._state = result.data.character
-        logger.info(f"Accept task {result.data.task}")
+        logger.debug(f"Accept task {result.data.task}")
         new_task = result.data.task
         return CharTask(code=new_task.code, task_type=TaskType(new_task.type.value),
                         total=new_task.total, progress=0)
@@ -45,13 +45,13 @@ class RemoteCharacterQuest(CharacterQuest):
     def complete_task(self):
         result: TaskRewardResponseSchema = ActionCompleteTask(self.name, client=self._client)()
         self._state = result.data.character
-        logger.info(f"Task complete {result.data.reward}")
+        logger.debug(f"Task complete {result.data.reward}")
 
     @char_exception_handler
     def exchange_tasks(self):
         result: TaskRewardResponseSchema = ActionTaskExchange(self.name, client=self._client)()
         self._state = result.data.character
-        logger.info(f"Task reward {result.data.reward}")
+        logger.debug(f"Task reward {result.data.reward}")
 
     def get_current_task(self) -> Optional[CharTask]:
         state = self._state

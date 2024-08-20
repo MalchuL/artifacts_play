@@ -69,7 +69,7 @@ class RemoteInventory(Inventory):
         equip_call = ActionEquipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = equip_call(equip)
         self._state = result.data.character
-        logger.info(f"Equip results: {result.data.slot}, {result.data.item}")
+        logger.debug(f"Equip results: {result.data.slot}, {result.data.item}")
 
     @char_exception_handler
     def unequip_item(self, item_slot: EquipmentSlot):
@@ -77,7 +77,7 @@ class RemoteInventory(Inventory):
         unequip_call = ActionUnequipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = unequip_call(unequip)
         self._state = result.data.character
-        logger.info(f"Unequip results: {result.data.slot}, {result.data.item}")
+        logger.debug(f"Unequip results: {result.data.slot}, {result.data.item}")
 
     @char_exception_handler
     def delete_item(self, item: Item, amount: int):
@@ -85,4 +85,4 @@ class RemoteInventory(Inventory):
         delete_call = ActionDeleteItem(name=self.name, client=self._client)
         result: DeleteItemResponseSchema = delete_call(delete)
         self._state = result.data.character
-        logger.info(f"Delete item results: {result.data.item}, {result.data.character.inventory}")
+        logger.debug(f"Delete item results: {result.data.item}, {result.data.character.inventory}")

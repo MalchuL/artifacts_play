@@ -148,13 +148,13 @@ class RestApiCharacter(Character):
         move_call = ActionMove(name=self.name, client=self._client)
         result: CharacterMovementResponseSchema = move_call(dest)
         self._state = result.data.character
-        logger.info("Move results " + str(result.data.destination))
+        logger.debug("Move results " + str(result.data.destination))
 
     @char_exception_handler
     def fight(self) -> FightResult:
         result: CharacterFightResponseSchema = ActionFight(name=self.name, client=self._client)()
         self._state = result.data.character
-        logger.info("Fight results " + str(result.data.fight))
+        logger.debug("Fight results " + str(result.data.fight))
         fight_result = FightResult.WIN if result.data.fight.result == Result.win else FightResult.LOSE
         return fight_result
 
@@ -164,7 +164,7 @@ class RestApiCharacter(Character):
             raise CharacterInventoryFullException()
         result: SkillResponseSchema = ActionGathering(self.name, client=self._client)()
         self._state = result.data.character
-        logger.info("Harvest results " + str(result.data.details))
+        logger.debug("Harvest results " + str(result.data.details))
 
     @char_exception_handler
     def craft(self, recipe: Item, amount: int):
@@ -172,7 +172,7 @@ class RestApiCharacter(Character):
         crafting_call = ActionCrafting(name=self.name, client=self._client)
         result: SkillResponseSchema = crafting_call(crafting_schema)
         self._state = result.data.character
-        logger.info("Crafting results " + str(result.data.details))
+        logger.debug("Crafting results " + str(result.data.details))
 
     @char_exception_handler
     def deposit_item(self, item: Item, amount: int):
@@ -180,7 +180,7 @@ class RestApiCharacter(Character):
         deposit_bank_call = ActionDepositBank(name=self.name, client=self._client)
         result: ActionItemBankResponseSchema = deposit_bank_call(simple_item_schema)
         self._state = result.data.character
-        logger.info(f"Deposit items={simple_item_schema} into bank {result.data.bank}")
+        logger.debug(f"Deposit items={simple_item_schema} into bank {result.data.bank}")
 
     @char_exception_handler
     def deposit_gold(self, amount: int):
@@ -188,7 +188,7 @@ class RestApiCharacter(Character):
         deposit_bank_call = ActionDepositBankGold(name=self.name, client=self._client)
         result: GoldResponseSchema = deposit_bank_call(simple_gold_schema)
         self._state = result.data.character
-        logger.info(f"Deposit gold={simple_gold_schema} into bank {result.data.bank}")
+        logger.debug(f"Deposit gold={simple_gold_schema} into bank {result.data.bank}")
 
     @char_exception_handler
     def recycle(self, item: Item, amount: int):
@@ -196,7 +196,7 @@ class RestApiCharacter(Character):
         recycle_call = ActionRecycling(name=self.name, client=self._client)
         result: RecyclingResponseSchema = recycle_call(recycle_schema)
         self._state = result.data.character
-        logger.info(f"Recycle {item}, {result.data.details}")
+        logger.debug(f"Recycle {item}, {result.data.details}")
 
     @char_exception_handler
     def withdraw_item(self, item: Item, amount: int):
@@ -204,7 +204,7 @@ class RestApiCharacter(Character):
         withdraw_bank_call = ActionWithdrawBank(name=self.name, client=self._client)
         result: ActionItemBankResponseSchema = withdraw_bank_call(simple_item_schema)
         self._state = result.data.character
-        logger.info(f"Withdraw items={simple_item_schema} from bank {result.data.item}")
+        logger.debug(f"Withdraw items={simple_item_schema} from bank {result.data.item}")
 
     @char_exception_handler
     def withdraw_gold(self, amount: int):
@@ -212,7 +212,7 @@ class RestApiCharacter(Character):
         withdraw_bank_call = ActionWithdrawBankGold(name=self.name, client=self._client)
         result: GoldResponseSchema = withdraw_bank_call(simple_gold_schema)
         self._state = result.data.character
-        logger.info(f"Withdraw gold={simple_gold_schema} from bank {result.data.bank}")
+        logger.debug(f"Withdraw gold={simple_gold_schema} from bank {result.data.bank}")
 
     @char_exception_handler
     def grand_exchange_buy_item(self, item: Item, amount: int, price: int):
@@ -220,7 +220,7 @@ class RestApiCharacter(Character):
         grand_exchange_buy_call = ActionGeBuyItem(name=self.name, client=self._client)
         result: GETransactionResponseSchema = grand_exchange_buy_call(transaction_schema)
         self._state = result.data.character
-        logger.info(
+        logger.debug(
             f"Buy items={transaction_schema} from Grand Exchange {result.data.transaction}")
 
     @char_exception_handler
@@ -229,5 +229,5 @@ class RestApiCharacter(Character):
         grand_exchange_sell_call = ActionGeSellItem(name=self.name, client=self._client)
         result: GETransactionResponseSchema = grand_exchange_sell_call(transaction_schema)
         self._state = result.data.character
-        logger.info(
+        logger.debug(
             f"Sell items={transaction_schema} from Grand Exchange {result.data.transaction}")

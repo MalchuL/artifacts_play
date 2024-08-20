@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod
 from typing import Union
 
@@ -9,12 +10,16 @@ from .request import HTTPRequest, DataSchema, ResponseSchema
 import httpx
 
 
+logger = logging.getLogger(__name__)
+
+
 class ArtifactsRequest(HTTPRequest):
     default_headers = {"Content-Type": "application/json",
                        "Accept": "application/json"}
 
-    def __init__(self, client: Union[Client, AuthenticatedClient]):
+    def __init__(self, client: Union[Client, AuthenticatedClient], retries=3):
         self._client = client
+        self._retries = retries
 
     def get(self) -> ResponseSchema:
         return self._make_request("get")
@@ -36,11 +41,18 @@ class ArtifactsRequest(HTTPRequest):
             json_data = None
         else:
             json_data = data.model_dump()
-        with evolve(self._client) as client:
-            url = self.get_endpoint()
-            response = client.get_httpx_client().request(method=method, url=url,
-                                                         headers=self.get_headers(),
-                                                         json=json_data)
+        for i in range(self._retries):
+            try:
+                with evolve(self._client) as client:
+                    url = self.get_endpoint()
+                    response = client.get_httpx_client().request(method=method, url=url,
+                                                                 headers=self.get_headers(),
+                                                                 json=json_data)
+                    break
+            except httpx.ConnectError as e:
+                logger.error(
+                    f"Error in sending request {dict(method=method, url=url, headers=self.get_headers(), json=json_data)}, {e}")
+                logger.error(f"Number of retries {i}/{self._retries}")
         self._parse_error(response)
         return self._process_response(method=method, response=response)
 
