@@ -19,6 +19,15 @@ class Result(Enum):
 class FightResult:
     drops: List[Items]
     result: Result
+    turns: int
+    gold: int
+    xp: int
+
+
+@dataclass
+class HarvestResult:
+    drops: List[Items]
+    xp: int
 
 
 class Character(ABC):
@@ -76,7 +85,7 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def harvest(self):
+    def harvest(self) -> HarvestResult:
         # Harvest a resource on the character's map.
         pass
 

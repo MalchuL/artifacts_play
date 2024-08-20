@@ -6,14 +6,14 @@ from typing import Union
 from dateutil.parser import parse as datetime_parser
 
 from src.playground.errors import CharacterInventoryFullException
-from src.playground.characters.character import Character, FightResult
+from src.playground.characters.character import Character, FightResult, Result, HarvestResult
 from src.playground.characters.character_stats import CharacterStats, Level, Skills, SkillLevel, Attack, \
     Resistance, PercentDamage
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
 from src.playground.characters.remote.remote_inventory import RemoteInventory
 from src.playground.characters.remote.remote_quest import RemoteCharacterQuest
-from src.playground.items.item import Item
+from src.playground.items.item import Item, Items
 from src.rest_api_client.api.characters import GetCharacter
 from src.rest_api_client.api.my_characters import ActionMove, ActionFight, ActionGathering, \
     ActionDepositBank, ActionCrafting, ActionDepositBankGold, ActionRecycling, \
@@ -23,7 +23,7 @@ from src.rest_api_client.model import CharacterSchema, CharacterMovementResponse
     DestinationSchema, CharacterFightResponseSchema, SkillResponseSchema, SimpleItemSchema, \
     ActionItemBankResponseSchema, CraftingSchema, GoldResponseSchema, \
     DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
-    GETransactionResponseSchema, GETransactionItemSchema, Result
+    GETransactionResponseSchema, GETransactionItemSchema, Result as ResultSchema
 
 logger = logging.getLogger(__name__)
 
@@ -154,17 +154,30 @@ class RestApiCharacter(Character):
     def fight(self) -> FightResult:
         result: CharacterFightResponseSchema = ActionFight(name=self.name, client=self._client)()
         self._state = result.data.character
-        logger.debug("Fight results " + str(result.data.fight))
-        fight_result = FightResult.WIN if result.data.fight.result == Result.win else FightResult.LOSE
+        logger.debug(f"Fight results {str(result.data.fight)}")
+
+        fight = result.data.fight
+        result_fight = Result.WIN if fight.result == ResultSchema.win else Result.LOSE
+        fight_result = FightResult(result=result_fight,
+                                   drops=[Items(Item(item.code), item.quantity) for item in
+                                          fight.drops],
+                                   turns=fight.turns,
+                                   xp=fight.xp,
+                                   gold=fight.gold)
         return fight_result
 
     @char_exception_handler
-    def harvest(self):
+    def harvest(self) -> HarvestResult:
         if self.inventory.is_inventory_full():
             raise CharacterInventoryFullException()
         result: SkillResponseSchema = ActionGathering(self.name, client=self._client)()
         self._state = result.data.character
-        logger.debug("Harvest results " + str(result.data.details))
+        logger.debug(f"Harvest results {str(result.data.details)}")
+        harvest = result.data.details
+        harvest_result = HarvestResult(drops=[Items(Item(item.code), item.quantity) for item in
+                                              harvest.items],
+                                       xp=harvest.xp)
+        return harvest_result
 
     @char_exception_handler
     def craft(self, recipe: Item, amount: int):

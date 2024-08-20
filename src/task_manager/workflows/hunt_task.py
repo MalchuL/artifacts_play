@@ -67,6 +67,8 @@ class HuntItemsTask(CharacterTask):
         (x_map, y_map), max_drops, target_map = self.locate_position(char_name, items)
         character = self.world.get_character(char_name)
 
+        hunted_items_count = 0
+
         self.logger.info(f"Hunt for resources at {target_map} for {items}")
         character.wait_until_ready()
         for i in range(items.quantity * target_map.rate):
@@ -76,5 +78,11 @@ class HuntItemsTask(CharacterTask):
             if x != x_map or y != y_map:
                 character.move(x=x_map, y=y_map)
                 character.wait_until_ready()
-            character.fight()
+            fight_result = character.fight()
+            for fight_items in fight_result.drops:
+                if fight_items.item.code == items.item.code:
+                    hunted_items_count += fight_items.quantity
+            self.logger.info(f"Hunt items {items.item.code}={hunted_items_count}/{items.quantity}")
             character.wait_until_ready()
+            if hunted_items_count >= items.quantity:
+                break

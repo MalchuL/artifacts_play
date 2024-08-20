@@ -7,6 +7,7 @@ from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.fabric.restapi_playground_world import RestApiPlaygroundWorld
 from src.playground.items import Item, Items
 from src.rest_api_client.client import AuthenticatedClient
+from src.task_manager.workflows.gather_items_task import GatherItemsTask
 
 from src.task_manager.workflows.state import set_world
 from src.task_manager.workflows.craft_item import CraftItemsTask
@@ -30,4 +31,4 @@ if __name__ == '__main__':
     set_world(world)
 
     item2craft = Items(Item(args.item_code), int(args.item_count))
-    target_task = CraftItemsTask(char_name, item2craft).start()
+    target_task = GatherItemsTask(char_name, item2craft).start()

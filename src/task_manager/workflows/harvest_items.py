@@ -63,6 +63,8 @@ class HarvestItemsTask(CharacterTask):
         (x_map, y_map), max_drops, target_map = self.locate_position(char_name, items)
         character = self.world.get_character(char_name)
 
+        harvested_items_count = 0
+
         self.logger.info(f"Harvest for resources at {target_map} for {items}")
         character.wait_until_ready()
         for i in range(items.quantity * target_map.rate):
@@ -72,8 +74,15 @@ class HarvestItemsTask(CharacterTask):
             if x != x_map or y != y_map:
                 character.move(x=x_map, y=y_map)
                 character.wait_until_ready()
-            character.harvest()
+            harvest_result = character.harvest()
+            for harvest_items in harvest_result.drops:
+                if harvest_items.item.code == items.item.code:
+                    harvested_items_count += harvest_items.quantity
             character.wait_until_ready()
+            self.logger.info(
+                f"Harvest items {items.item.code}={harvested_items_count}/{items.quantity}")
+            if harvested_items_count >= items.quantity:
+                break
 
     def run(self):
         return self.harvest_items(self.char_name, items=self.items)

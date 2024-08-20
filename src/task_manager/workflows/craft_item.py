@@ -84,10 +84,10 @@ class CraftItemsTask(CharacterTask):
         required_inventory_size_to_craft = sum(item.quantity for item in craft_schema.items)
         # How many items we can craft per single call
         possible_craft_amount = inventory_capacity // required_inventory_size_to_craft * craft_schema.quantity
-        self.logger.info(f"Number of steps to craft={possible_craft_amount}")
 
-        crafting_steps = (
-                                     crafting_items.quantity + possible_craft_amount - 1) // possible_craft_amount
+        crafting_steps = (crafting_items.quantity +
+                          possible_craft_amount - 1) // possible_craft_amount
+        self.logger.info(f"Number of steps to craft={crafting_steps}")
         for i in range(crafting_steps):
             if i == crafting_steps - 1:
                 amount = crafting_items.quantity % possible_craft_amount
