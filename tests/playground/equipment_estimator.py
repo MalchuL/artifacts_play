@@ -27,7 +27,7 @@ def test_equipment_estimator(level):
 
     pprint(simulator.optimal_vs_monster(character, monster.get_monster_info(monster.monster_from_id("cow"))))
 
-@pytest.mark.parametrize('monster_name', ['lich', 'owlbear', 'red_slime'])
+@pytest.mark.parametrize('monster_name', ['lich', 'owlbear', 'red_slime', 'vampire'])
 def test_equipment_all_items_estimator(monster_name):
     char_name = settings.CHARACTERS[0]
     client = AuthenticatedClient(base_url=settings.API_HOST, token=settings.API_TOKEN)

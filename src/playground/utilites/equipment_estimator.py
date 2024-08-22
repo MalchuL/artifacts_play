@@ -43,10 +43,10 @@ class EquipmentEstimator:
         fighting_items = [item for item in self.available_equipment if
                           item.type in target_items_type]
 
-        monster_hp = monster.stats.hp
+        #monster_hp = monster.stats.hp
         monster_resistance = monster.stats.resistance
         monster_attack = monster.stats.attack
-        character_hp = CharacterEstimator().estimate_hp(character.stats.level.level)
+        #character_hp = CharacterEstimator().estimate_hp(character.stats.level.level)
         # Optimizing damage (and a little bit resistance), I'll use and quadratic optimization problem
         # Refer to https://pypi.org/project/qpsolvers/
         # P matrix is and attack + damage boost added to total if two items equipped together
@@ -84,7 +84,7 @@ class EquipmentEstimator:
                             resistance_mult = (1 - monster_resistance.earth * 0.01)
                             effect = effect1_value * effect2_value * resistance_mult
                         # We calculate percent of monster hp dealt by single attack
-                        dealed_damage += effect * 2 / monster_hp  # Because it divides by 2 in solver
+                        dealed_damage += effect * 2  # Because it divides by 2 in solver
                 additional_damage_matrix[i, j] = dealed_damage
             # Calulate damage only for weapons
             item_effect = 0
@@ -92,25 +92,25 @@ class EquipmentEstimator:
                 match effect1.type:
                     # Attack monster
                     case EffectType.ATTACK_FIRE:
-                        item_effect += effect1.value * (1 - monster_resistance.fire * 0.01) / monster_hp
+                        item_effect += effect1.value * (1 - monster_resistance.fire * 0.01)
                     case EffectType.ATTACK_AIR:
-                        item_effect += effect1.value * (1 - monster_resistance.air * 0.01) / monster_hp
+                        item_effect += effect1.value * (1 - monster_resistance.air * 0.01)
                     case EffectType.ATTACK_WATER:
-                        item_effect += effect1.value * (1 - monster_resistance.water * 0.01) / monster_hp
+                        item_effect += effect1.value * (1 - monster_resistance.water * 0.01)
                     case EffectType.ATTACK_EARTH:
-                        item_effect += effect1.value * (1 - monster_resistance.earth * 0.01) / monster_hp
+                        item_effect += effect1.value * (1 - monster_resistance.earth * 0.01)
                     # Character can longer fights
-                    # Maximize resistance to monster attack
+                    # Maximize blocked damage to monster attack
                     case EffectType.RESIST_FIRE:
-                        item_effect += monster_attack.fire * effect1.value * 0.01 / character_hp / MAX_FIGHTS_LENGTH
+                        item_effect += monster_attack.fire * effect1.value * 0.01
                     case EffectType.RESIST_AIR:
-                        item_effect += monster_attack.air * effect1.value * 0.01 / character_hp / MAX_FIGHTS_LENGTH
+                        item_effect += monster_attack.air * effect1.value * 0.01
                     case EffectType.RESIST_WATER:
-                        item_effect += monster_attack.water * effect1.value * 0.01 / character_hp / MAX_FIGHTS_LENGTH
+                        item_effect += monster_attack.water * effect1.value * 0.01
                     case EffectType.RESIST_EARTH:
-                        item_effect += monster_attack.earth * effect1.value * 0.01 / character_hp / MAX_FIGHTS_LENGTH
+                        item_effect += monster_attack.earth * effect1.value * 0.01
                     case EffectType.HP:
-                        item_effect += effect1.value / character_hp / MAX_FIGHTS_LENGTH / 10  # 10 is hyperparameter
+                        item_effect += effect1.value / 10  # 10 is hyperparameter
             item_vector[i] += item_effect
         additional_damage_matrix = np.maximum(additional_damage_matrix, additional_damage_matrix.transpose())  # Make it symmetrical
         #item_vector += np.random.rand(*item_vector.shape) * 0.005 / monster_hp
@@ -178,6 +178,11 @@ class EquipmentEstimator:
                         equipped_item[EquipmentSlot.RING2] = item[0]
                         break
                     else:
-                        slot = EquipmentSlot(ItemType.ring.value + str(i))
+                        slot = EquipmentSlot(ItemType.ring.value + str(i+1))
                         equipped_item[slot] = item[0]
+            if item_type == ItemType.artifact:
+                for i, artifact in enumerate(sorted_values[:3]):
+                    slot = EquipmentSlot(ItemType.artifact.value + str(i+1))
+                    equipped_item[slot] = artifact[0]
+
         return equipped_item
