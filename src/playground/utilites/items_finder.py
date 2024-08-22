@@ -32,7 +32,7 @@ class ItemFinder:
         :return:
         """
         assert isinstance(search_item, Item)
-        crafting: ItemCraftingInfoManager = self.world.crafting
+        crafting: ItemCraftingInfoManager = self.world.item_details
         crafts = {item.code: item for item in crafting.get_crafts() if item.craft}
         return crafts.get(search_item.code, None)
 

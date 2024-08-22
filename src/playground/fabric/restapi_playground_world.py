@@ -30,7 +30,7 @@ class RestApiPlaygroundWorld(PlaygroundWorld):
         return self.__bank
 
     @property
-    def crafting(self) -> ItemCraftingInfoManager:
+    def item_details(self) -> ItemCraftingInfoManager:
         if self.__crafting is None:
             self.__crafting = RestApiItemCraftingInfoManager(self._client)
         return self.__crafting

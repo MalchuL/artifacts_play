@@ -17,7 +17,7 @@ class PlaygroundWorld(ABC):
 
     @property
     @abstractmethod
-    def crafting(self) -> ItemCraftingInfoManager:
+    def item_details(self) -> ItemCraftingInfoManager:
         pass
 
     @property

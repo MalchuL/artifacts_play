@@ -18,7 +18,7 @@ class EquipmentSlot(Enum):
     ARTIFACT1 = "artifact1"
     ARTIFACT2 = "artifact2"
     ARTIFACT3 = "artifact3"
-    CONSUMABLE = "consumable1"
+    CONSUMABLE1 = "consumable1"
     CONSUMABLE2 = "consumable2"
 
 
@@ -66,6 +66,13 @@ class Inventory(ABC):
     def delete_item(self, item: Item, amount: int):
         # Deleting an item from your inventory.
         pass
+
+    def get_items(self, item: Item) -> Optional[Items]:
+        inventory_items = [inv_item for inv_item in self.items if inv_item.item.code == item.code]
+        if inventory_items:
+            return inventory_items[0]
+        else:
+            return None
 
     def get_items_amount(self):
         quantity = 0

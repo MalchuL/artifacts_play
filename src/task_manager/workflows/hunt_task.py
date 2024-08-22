@@ -82,7 +82,7 @@ class HuntItemsTask(CharacterTask):
             for fight_items in fight_result.drops:
                 if fight_items.item.code == items.item.code:
                     hunted_items_count += fight_items.quantity
-            self.logger.info(f"Hunt items {items.item.code}={hunted_items_count}/{items.quantity}")
+            self.logger.info(f"Hunt items {items.item.code}={hunted_items_count}/{items.quantity}, fight_result={fight_result}")
             character.wait_until_ready()
             if hunted_items_count >= items.quantity:
                 break

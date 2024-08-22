@@ -39,7 +39,7 @@ class CraftItemTask(CharacterTask):
         crating_item = from_json(self.crating_items, ItemsAdapter)
         world = self.world
 
-        crafting_items = world.crafting.get_craft(crating_item.item)
+        crafting_items = world.item_details.get_craft(crating_item.item)
         items = crafting_items.craft.items
         whole_items = to_json([item.item for item in items], ListItemAdapter)
 
@@ -55,7 +55,7 @@ class CraftItemTask(CharacterTask):
             available_items = from_json(json.load(f), ListItemsAdapter)
             available_items_dict: Dict[str, Items] = {items.item.code: items for items
                                                                  in available_items}
-        item_schema = world.crafting.get_craft(crafting_items.item)
+        item_schema = world.item_details.get_craft(crafting_items.item)
         required_items = item_schema.craft.items
         missed_items = []
         for required_item in required_items:

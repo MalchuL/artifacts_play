@@ -2,4 +2,5 @@ dynaconf
 pytest
 requests
 datamodel-code-generator
-luigi
+numpy
+qpsolvers[osqp]

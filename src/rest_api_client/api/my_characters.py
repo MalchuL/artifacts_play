@@ -1,15 +1,9 @@
 from src.rest_api_client.api.named_classes import CharacterRequest
-from ..model import DataPageMapSchema, SimpleItemSchema, MonsterResponseSchema, \
-    MyCharactersListSchema, GETransactionItemSchema, GoldResponseSchema, \
-    CharacterFightResponseSchema, EquipSchema, DepositWithdrawGoldSchema, ChangePassword, \
-    ResponseSchema, DataPageActiveEventSchema, RecyclingResponseSchema, DataPageResourceSchema, \
-    DeleteCharacterSchema, GoldBankResponseSchema, DataPageItemSchema, StatusResponseSchema, \
-    ItemResponseSchema, AddAccountSchema, DataPageLogSchema, TaskResponseSchema, RecyclingSchema, \
-    CraftingSchema, ResourceResponseSchema, TokenResponseSchema, UnequipSchema, \
-    DataPageGEItemSchema, EquipmentResponseSchema, MapResponseSchema, DataPageCharacterSchema, \
-    ActionItemBankResponseSchema, CharacterResponseSchema, DataPageSimpleItemSchema, \
-    SkillResponseSchema, GETransactionResponseSchema, AddCharacterSchema, DataPageMonsterSchema, \
-    TaskRewardResponseSchema, DeleteItemResponseSchema, GEItemResponseSchema, DestinationSchema, \
+from ..model import SimpleItemSchema, GETransactionItemSchema, GoldResponseSchema, \
+    CharacterFightResponseSchema, EquipSchema, DepositWithdrawGoldSchema, RecyclingResponseSchema,\
+    TaskResponseSchema, RecyclingSchema, CraftingSchema, UnequipSchema, EquipmentResponseSchema, \
+    ActionItemBankResponseSchema, SkillResponseSchema, GETransactionResponseSchema, \
+    TaskRewardResponseSchema, DeleteItemResponseSchema, DestinationSchema, \
     CharacterMovementResponseSchema
 
 

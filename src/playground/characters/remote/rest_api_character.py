@@ -163,7 +163,9 @@ class RestApiCharacter(Character):
                                           fight.drops],
                                    turns=fight.turns,
                                    xp=fight.xp,
-                                   gold=fight.gold)
+                                   gold=fight.gold,
+                                   cooldown=result.data.cooldown.total_seconds,
+                                   logs=fight.logs)
         return fight_result
 
     @char_exception_handler

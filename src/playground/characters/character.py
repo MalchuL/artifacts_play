@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from src.playground.characters.character_stats import CharacterStats
 from src.playground.characters.character_task import CharacterQuest
@@ -22,6 +22,8 @@ class FightResult:
     turns: int
     gold: int
     xp: int
+    cooldown: int
+    logs: List[str] = field(default_factory=list)
 
 
 @dataclass

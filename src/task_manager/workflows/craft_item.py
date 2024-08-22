@@ -1,3 +1,4 @@
+import copy
 from typing import Dict, List
 
 from src.playground.characters import SkillType
@@ -18,8 +19,9 @@ class CraftItemsTask(CharacterTask):
     def available_items_task(char_name, required_items: List[Item]):
         task = AvailableItems(char_name=char_name,
                               required_items=required_items)
-        output = task.start()
-        return output["available_items"]
+        task.start()
+        output = task.outputs()
+        return copy.deepcopy(output["available_items"])
 
     @staticmethod
     def gather_items_task(char_name, items: Items):
@@ -35,7 +37,7 @@ class CraftItemsTask(CharacterTask):
     def check_and_get_missed_items(self, char_name, crafting_items: Items):
         world = self.world
 
-        item_schema = world.crafting.get_craft(crafting_items.item)
+        item_schema = world.item_details.get_craft(crafting_items.item)
 
         # Find available items
         required_items: List[Items] = item_schema.craft.items
@@ -75,7 +77,7 @@ class CraftItemsTask(CharacterTask):
         world = self.world
         crafted_items_amount = 0
 
-        item_schema = world.crafting.get_craft(crafting_items.item)
+        item_schema = world.item_details.get_craft(crafting_items.item)
         character = world.get_character(self.char_name)
         inventory_capacity = character.inventory.max_inventory_amount
 

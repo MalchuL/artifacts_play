@@ -1,6 +1,6 @@
 [default]
 api_host = "https://api.artifactsmmo.com"
-characters = ["Podtekatel"]
+characters = ["PythonLover"]
 
 debug_modules = true
 task_out_directory="/tmp/task_outs"

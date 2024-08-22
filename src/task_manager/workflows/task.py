@@ -12,6 +12,7 @@ class Task(ABC):
     def __init__(self):
         self._outs = {}
         self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger.propagate = True
 
     @property
     def logger(self) -> logging.Logger:
@@ -32,4 +33,4 @@ class Task(ABC):
                 break
             except Rerun as e:
                 self.logger.info(f"Rerun {self.__class__.__name__}, {e}")
-        return copy.deepcopy(self.outputs())
+        return self.outputs()

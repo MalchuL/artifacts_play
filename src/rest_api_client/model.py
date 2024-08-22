@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List, Optional, Union
 
-from pydantic import BaseModel, EmailStr, Field, conint, constr
+from pydantic import BaseModel, EmailStr, Field, conint, constr, ConfigDict
 
 
 class AddAccountSchema(BaseModel):
@@ -175,6 +175,8 @@ class Slot(Enum):
 
 
 class EquipSchema(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)  # To interpet enum as str
+
     code: constr(pattern=r'^[a-zA-Z0-9_-]+$') = Field(
         ..., description='Item code.', title='Code'
     )
@@ -425,6 +427,8 @@ class TokenResponseSchema(BaseModel):
 
 
 class UnequipSchema(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)  # To interpet enum as str
+
     slot: Slot = Field(..., description='Item slot.', title='Slot')
 
 

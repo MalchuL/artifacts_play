@@ -1,4 +1,6 @@
 import logging
+import os.path
+import pickle
 from typing import Dict, List, Optional
 
 from src.playground.characters.character_stats import SkillType
@@ -12,16 +14,32 @@ from src.rest_api_client.model import DataPageItemSchema, ItemSchema
 
 logger = logging.getLogger(__name__)
 
+CACHE_FOLDER = ".artifacts_cache"
+
 
 class RestApiItemCraftingInfoManager(ItemCraftingInfoManager):
 
-    def __init__(self, client: AuthenticatedClient, pull_status=True):
+    def __init__(self, client: AuthenticatedClient, pull_status=True, cache=True):
         super().__init__()
 
         # Hidden variables
         self._client = client
         self._items: Optional[Dict[str, CraftingItem]] = None
-        if pull_status:
+        if cache:
+            cache_path = os.path.join(CACHE_FOLDER, "items_cache.pkl")
+            if os.path.exists(cache_path):
+                logger.info("Saving items info to local")
+                with open(cache_path, 'rb') as f:
+                    self._items = pickle.load(f)
+            else:
+                logger.info("Pulling items info from local")
+                os.makedirs(CACHE_FOLDER)
+                self._items = self.__pull_state()
+                with open(cache_path, 'wb') as f:
+                    pickle.dump(self._items, f)
+
+        if pull_status and not cache:
+            logger.info("Pulling items info from server")
             self._items = self.__pull_state()
 
     @staticmethod
