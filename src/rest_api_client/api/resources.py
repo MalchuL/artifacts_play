@@ -6,12 +6,12 @@ class GetAllResources(PagedRequest):
     """
     Get All Resources
     Fetch resources details.
-    operationId: get_all_resources_resources__get
+    operationId: get_all_resources_resources_get
     """
-    endpoint_pattern = '/resources/?page={page}&size={page_size}'
+    endpoint_pattern = '/resources?page={page}&size={page_size}'
     method_name = 'get'
     response_schema = DataPageResourceSchema
-    error_responses = {404: 'Resources not found.'}
+    error_responses = {}
 
     def __call__(self) -> DataPageResourceSchema:
         return super().__call__(None)
@@ -26,7 +26,7 @@ class GetResource(ObjectCodeRequest):
     endpoint_pattern = '/resources/{code}'
     method_name = 'get'
     response_schema = ResourceResponseSchema
-    error_responses = {404: 'Ressource not found.'}
+    error_responses = {404: 'Resource not found.'}
 
     def __call__(self) -> ResourceResponseSchema:
         return super().__call__(None)

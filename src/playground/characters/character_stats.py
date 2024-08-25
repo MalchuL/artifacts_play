@@ -7,7 +7,6 @@ class Level:
     level: int
     xp: int
     max_xp: int
-    total_xp: int
 
 
 @dataclass(frozen=True)

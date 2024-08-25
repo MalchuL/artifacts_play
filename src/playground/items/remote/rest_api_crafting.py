@@ -33,7 +33,7 @@ class RestApiItemCraftingInfoManager(ItemCraftingInfoManager):
                     self._items = pickle.load(f)
             else:
                 logger.info("Pulling items info from local")
-                os.makedirs(CACHE_FOLDER)
+                os.makedirs(CACHE_FOLDER, exist_ok=True)
                 self._items = self.__pull_state()
                 with open(cache_path, 'wb') as f:
                     pickle.dump(self._items, f)

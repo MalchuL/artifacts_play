@@ -21,9 +21,9 @@ from src.rest_api_client.api.my_characters import ActionMove, ActionFight, Actio
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import CharacterSchema, CharacterMovementResponseSchema, \
     DestinationSchema, CharacterFightResponseSchema, SkillResponseSchema, SimpleItemSchema, \
-    ActionItemBankResponseSchema, CraftingSchema, GoldResponseSchema, \
-    DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
-    GETransactionResponseSchema, GETransactionItemSchema, Result as ResultSchema
+    CraftingSchema, DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
+    GETransactionResponseSchema, GETransactionItemSchema, Result as ResultSchema, \
+    BankItemTransactionResponseSchema, BankGoldTransactionResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +87,7 @@ class RestApiCharacter(Character):
                               haste=state.haste,
                               level=Level(level=state.level,
                                           xp=state.xp,
-                                          max_xp=state.max_xp,
-                                          total_xp=state.total_xp),
+                                          max_xp=state.max_xp),
                               attack=Attack(earth=state.attack_earth,
                                             water=state.attack_water,
                                             fire=state.attack_fire,
@@ -193,7 +192,7 @@ class RestApiCharacter(Character):
     def deposit_item(self, item: Item, amount: int):
         simple_item_schema = SimpleItemSchema(code=item.code, quantity=amount)
         deposit_bank_call = ActionDepositBank(name=self.name, client=self._client)
-        result: ActionItemBankResponseSchema = deposit_bank_call(simple_item_schema)
+        result: BankItemTransactionResponseSchema = deposit_bank_call(simple_item_schema)
         self._state = result.data.character
         logger.debug(f"Deposit items={simple_item_schema} into bank {result.data.bank}")
 
@@ -201,7 +200,7 @@ class RestApiCharacter(Character):
     def deposit_gold(self, amount: int):
         simple_gold_schema = DepositWithdrawGoldSchema(quantity=amount)
         deposit_bank_call = ActionDepositBankGold(name=self.name, client=self._client)
-        result: GoldResponseSchema = deposit_bank_call(simple_gold_schema)
+        result: BankGoldTransactionResponseSchema = deposit_bank_call(simple_gold_schema)
         self._state = result.data.character
         logger.debug(f"Deposit gold={simple_gold_schema} into bank {result.data.bank}")
 
@@ -217,7 +216,7 @@ class RestApiCharacter(Character):
     def withdraw_item(self, item: Item, amount: int):
         simple_item_schema = SimpleItemSchema(code=item.code, quantity=amount)
         withdraw_bank_call = ActionWithdrawBank(name=self.name, client=self._client)
-        result: ActionItemBankResponseSchema = withdraw_bank_call(simple_item_schema)
+        result: BankItemTransactionResponseSchema = withdraw_bank_call(simple_item_schema)
         self._state = result.data.character
         logger.debug(f"Withdraw items={simple_item_schema} from bank {result.data.item}")
 
@@ -225,7 +224,7 @@ class RestApiCharacter(Character):
     def withdraw_gold(self, amount: int):
         simple_gold_schema = DepositWithdrawGoldSchema(quantity=amount)
         withdraw_bank_call = ActionWithdrawBankGold(name=self.name, client=self._client)
-        result: GoldResponseSchema = withdraw_bank_call(simple_gold_schema)
+        result: BankGoldTransactionResponseSchema = withdraw_bank_call(simple_gold_schema)
         self._state = result.data.character
         logger.debug(f"Withdraw gold={simple_gold_schema} from bank {result.data.bank}")
 

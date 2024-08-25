@@ -4,7 +4,7 @@ from typing import List, Optional
 from src.playground.bank.bank import Bank
 
 from src.playground.items.item import Item, Items
-from src.rest_api_client.api.bank import GetBankItems, GetBankGolds, GetBankItem
+from src.rest_api_client.api.bank import GetBankItems, GetBankItem, GetBankDetails
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.errors import ArtifactsHTTPStatusError
 from src.rest_api_client.model import SimpleItemSchema, DataPageSimpleItemSchema
@@ -56,5 +56,5 @@ class RestApiBank(Bank):
 
 
     def get_bank_gold(self) -> int:
-        gold = GetBankGolds(client=self._client)().data.quantity
+        gold = GetBankDetails(client=self._client)().data.gold
         return gold

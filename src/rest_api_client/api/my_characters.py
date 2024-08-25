@@ -1,10 +1,12 @@
 from src.rest_api_client.api.named_classes import CharacterRequest
-from ..model import SimpleItemSchema, GETransactionItemSchema, GoldResponseSchema, \
-    CharacterFightResponseSchema, EquipSchema, DepositWithdrawGoldSchema, RecyclingResponseSchema,\
+from ..model import SimpleItemSchema, GETransactionItemSchema, \
+    CharacterFightResponseSchema, EquipSchema, DepositWithdrawGoldSchema, RecyclingResponseSchema, \
     TaskResponseSchema, RecyclingSchema, CraftingSchema, UnequipSchema, EquipmentResponseSchema, \
-    ActionItemBankResponseSchema, SkillResponseSchema, GETransactionResponseSchema, \
+    SkillResponseSchema, GETransactionResponseSchema, \
     TaskRewardResponseSchema, DeleteItemResponseSchema, DestinationSchema, \
-    CharacterMovementResponseSchema
+    CharacterMovementResponseSchema, BankItemTransactionResponseSchema, \
+    BankGoldTransactionResponseSchema, BankExtensionTransactionResponseSchema, \
+    TaskCancelledResponseSchema
 
 
 class ActionMove(CharacterRequest):
@@ -36,7 +38,8 @@ class ActionEquipItem(CharacterRequest):
     method_name = 'post'
     response_schema = EquipmentResponseSchema
     error_responses = {404: 'Item not found.',
-                       478: 'Missing item or insufficient quantity in your inventory.',
+                       478: 'Missing item or insufficient quantity.',
+                       484: "Character can't equip more than 100 consumables in the same slot.",
                        485: 'This item is already equipped.',
                        486: 'An action is already in progress by your character.',
                        491: 'Slot is not empty.',
@@ -58,6 +61,7 @@ class ActionUnequipItem(CharacterRequest):
     method_name = 'post'
     response_schema = EquipmentResponseSchema
     error_responses = {404: 'Item not found.',
+                       478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        491: 'Slot is empty.',
                        497: 'Character inventory is full.',
@@ -117,7 +121,7 @@ class ActionCrafting(CharacterRequest):
     method_name = 'post'
     response_schema = SkillResponseSchema
     error_responses = {404: 'Craft not found.',
-                       478: 'Missing item or insufficient quantity in your inventory.',
+                       478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        493: 'Not skill level required.',
                        497: 'Character inventory is full.',
@@ -137,16 +141,17 @@ class ActionDepositBank(CharacterRequest):
     """
     endpoint_pattern = '/my/{name}/action/bank/deposit'
     method_name = 'post'
-    response_schema = ActionItemBankResponseSchema
+    response_schema = BankItemTransactionResponseSchema
     error_responses = {404: 'Item not found.',
                        461: 'A transaction is already in progress with this item/your golds in your bank.',
-                       478: 'Missing item or insufficient quantity in your inventory.',
+                       462: 'Your bank is full.',
+                       478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        498: 'Character not found.',
                        499: 'Character in cooldown.',
                        598: 'Bank not found on this map.'}
 
-    def __call__(self, data: SimpleItemSchema) -> ActionItemBankResponseSchema:
+    def __call__(self, data: SimpleItemSchema) -> BankItemTransactionResponseSchema:
         return super().__call__(data)
 
 
@@ -158,16 +163,15 @@ class ActionDepositBankGold(CharacterRequest):
     """
     endpoint_pattern = '/my/{name}/action/bank/deposit/gold'
     method_name = 'post'
-    response_schema = GoldResponseSchema
-    error_responses = {
-        461: 'A transaction is already in progress with this item/your golds in your bank.',
-        486: 'An action is already in progress by your character.',
-        492: 'Insufficient golds on your character.',
-        498: 'Character not found.',
-        499: 'Character in cooldown.',
-        598: 'Bank not found on this map.'}
+    response_schema = BankGoldTransactionResponseSchema
+    error_responses = {461: 'A transaction is already in progress with this item/your golds in your bank.',
+                       486: 'An action is already in progress by your character.',
+                       492: 'Insufficient golds on your character.',
+                       498: 'Character not found.',
+                       499: 'Character in cooldown.',
+                       598: 'Bank not found on this map.'}
 
-    def __call__(self, data: DepositWithdrawGoldSchema) -> GoldResponseSchema:
+    def __call__(self, data: DepositWithdrawGoldSchema) -> BankGoldTransactionResponseSchema:
         return super().__call__(data)
 
 
@@ -182,7 +186,7 @@ class ActionRecycling(CharacterRequest):
     response_schema = RecyclingResponseSchema
     error_responses = {404: 'Item not found.',
                        473: 'This item cannot be recycled.',
-                       478: 'Missing item or insufficient quantity in your inventory.',
+                       478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        493: 'Not skill level required.',
                        497: 'Character inventory is full.',
@@ -202,17 +206,17 @@ class ActionWithdrawBank(CharacterRequest):
     """
     endpoint_pattern = '/my/{name}/action/bank/withdraw'
     method_name = 'post'
-    response_schema = ActionItemBankResponseSchema
+    response_schema = BankItemTransactionResponseSchema
     error_responses = {404: 'Item not found.',
                        461: 'A transaction is already in progress with this item/your golds in your bank.',
-                       478: 'Missing item or insufficient quantity in your inventory.',
+                       478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        497: 'Character inventory is full.',
                        498: 'Character not found.',
                        499: 'Character in cooldown.',
                        598: 'Bank not found on this map.'}
 
-    def __call__(self, data: SimpleItemSchema) -> ActionItemBankResponseSchema:
+    def __call__(self, data: SimpleItemSchema) -> BankItemTransactionResponseSchema:
         return super().__call__(data)
 
 
@@ -224,7 +228,7 @@ class ActionWithdrawBankGold(CharacterRequest):
     """
     endpoint_pattern = '/my/{name}/action/bank/withdraw/gold'
     method_name = 'post'
-    response_schema = GoldResponseSchema
+    response_schema = BankGoldTransactionResponseSchema
     error_responses = {460: 'Insufficient golds in your bank.',
                        461: 'A transaction is already in progress with this item/your golds in your bank.',
                        486: 'An action is already in progress by your character.',
@@ -232,7 +236,7 @@ class ActionWithdrawBankGold(CharacterRequest):
                        499: 'Character in cooldown.',
                        598: 'Bank not found on this map.'}
 
-    def __call__(self, data: DepositWithdrawGoldSchema) -> GoldResponseSchema:
+    def __call__(self, data: DepositWithdrawGoldSchema) -> BankGoldTransactionResponseSchema:
         return super().__call__(data)
 
 
@@ -245,7 +249,8 @@ class ActionGeBuyItem(CharacterRequest):
     endpoint_pattern = '/my/{name}/action/ge/buy'
     method_name = 'post'
     response_schema = GETransactionResponseSchema
-    error_responses = {480: 'No stock for this item.',
+    error_responses = {479: "You can't buy or sell that many items at the same time.",
+                       480: 'No stock for this item.',
                        482: 'No item at this price.',
                        483: 'A transaction is already in progress on this item by a another character.',
                        486: 'An action is already in progress by your character.',
@@ -269,7 +274,8 @@ class ActionGeSellItem(CharacterRequest):
     method_name = 'post'
     response_schema = GETransactionResponseSchema
     error_responses = {404: 'Item not found.',
-                       478: 'Missing item or insufficient quantity in your inventory.',
+                       478: 'Missing item or insufficient quantity.',
+                       479: "You can't buy or sell that many items at the same time.",
                        482: 'No item at this price.',
                        483: 'A transaction is already in progress on this item by a another character.',
                        486: 'An action is already in progress by your character.',
@@ -279,6 +285,25 @@ class ActionGeSellItem(CharacterRequest):
 
     def __call__(self, data: GETransactionItemSchema) -> GETransactionResponseSchema:
         return super().__call__(data)
+
+
+class ActionBuyBankExpansion(CharacterRequest):
+    """
+    Action Buy Bank Expansion
+    Buy a 20 slots bank expansion.
+    operationId: action_buy_bank_expansion_my__name__action_bank_buy_expansion_post
+    """
+    endpoint_pattern = '/my/{name}/action/bank/buy_expansion'
+    method_name = 'post'
+    response_schema = BankExtensionTransactionResponseSchema
+    error_responses = {486: 'An action is already in progress by your character.',
+                       492: 'Insufficient golds on your character.',
+                       498: 'Character not found.',
+                       499: 'Character in cooldown.',
+                       598: 'Bank not found on this map.'}
+
+    def __call__(self) -> BankExtensionTransactionResponseSchema:
+        return super().__call__(None)
 
 
 class ActionAcceptNewTask(CharacterRequest):
@@ -330,7 +355,7 @@ class ActionTaskExchange(CharacterRequest):
     endpoint_pattern = '/my/{name}/action/task/exchange'
     method_name = 'post'
     response_schema = TaskRewardResponseSchema
-    error_responses = {478: 'Missing item or insufficient quantity in your inventory.',
+    error_responses = {478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        497: 'Character inventory is full.',
                        498: 'Character not found.',
@@ -338,6 +363,26 @@ class ActionTaskExchange(CharacterRequest):
                        598: 'Tasks Master not found on this map.'}
 
     def __call__(self) -> TaskRewardResponseSchema:
+        return super().__call__(None)
+
+
+class ActionTaskCancel(CharacterRequest):
+    """
+    Action Task Cancel
+    Cancel a task for 1 tasks coin.
+    operationId: action_task_cancel_my__name__action_task_cancel_post
+    """
+    endpoint_pattern = '/my/{name}/action/task/cancel'
+    method_name = 'post'
+    response_schema = TaskCancelledResponseSchema
+    error_responses = {478: 'Missing item or insufficient quantity.',
+                       486: 'An action is already in progress by your character.',
+                       497: 'Character inventory is full.',
+                       498: 'Character not found.',
+                       499: 'Character in cooldown.',
+                       598: 'Tasks Master not found on this map.'}
+
+    def __call__(self) -> TaskCancelledResponseSchema:
         return super().__call__(None)
 
 
@@ -350,11 +395,10 @@ class ActionDeleteItem(CharacterRequest):
     endpoint_pattern = '/my/{name}/action/delete'
     method_name = 'post'
     response_schema = DeleteItemResponseSchema
-    error_responses = {478: 'Missing item or insufficient quantity in your inventory.',
+    error_responses = {478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        498: 'Character not found.',
                        499: 'Character in cooldown.'}
 
     def __call__(self, data: SimpleItemSchema) -> DeleteItemResponseSchema:
         return super().__call__(data)
-

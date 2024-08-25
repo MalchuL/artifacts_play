@@ -7,12 +7,12 @@ class GetAllMonsters(PagedRequest):
     """
     Get All Monsters
     Fetch monsters details.
-    operationId: get_all_monsters_monsters__get
+    operationId: get_all_monsters_monsters_get
     """
-    endpoint_pattern = '/monsters/?page={page}&size={page_size}'
+    endpoint_pattern = '/monsters?page={page}&size={page_size}'
     method_name = 'get'
     response_schema = DataPageMonsterSchema
-    error_responses = {404: 'Monsters not found.'}
+    error_responses = {}
 
     def __call__(self) -> DataPageMonsterSchema:
         return super().__call__(None)

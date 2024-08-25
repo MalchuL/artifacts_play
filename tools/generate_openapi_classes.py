@@ -2,7 +2,7 @@ import pprint
 
 from openapi_parser import parse
 
-content = parse('.stuff/openapi.yaml')
+content = parse('.stuff/openapiv2.yaml')
 
 """
 Parses file and creates files for src/rest_api_client

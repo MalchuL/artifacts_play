@@ -6,12 +6,12 @@ class GetAllItems(PagedRequest):
     """
     Get All Items
     Fetch items details.
-    operationId: get_all_items_items__get
+    operationId: get_all_items_items_get
     """
-    endpoint_pattern = '/items/?page={page}&size={page_size}'
+    endpoint_pattern = '/items?page={page}&size={page_size}'
     method_name = 'get'
     response_schema = DataPageItemSchema
-    error_responses = {404: 'Items not found.'}
+    error_responses = {}
 
     def __call__(self) -> DataPageItemSchema:
         return super().__call__(None)

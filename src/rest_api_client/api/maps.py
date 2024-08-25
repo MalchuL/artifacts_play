@@ -10,12 +10,12 @@ class GetAllMaps(PagedRequest):
     """
     Get All Maps
     Fetch maps details.
-    operationId: get_all_maps_maps__get
+    operationId: get_all_maps_maps_get
     """
-    endpoint_pattern = '/maps/?page={page}&size={page_size}'
+    endpoint_pattern = '/maps?page={page}&size={page_size}'
     method_name = 'get'
     response_schema = DataPageMapSchema
-    error_responses = {404: 'Maps not found.'}
+    error_responses = {}
 
     def __call__(self) -> DataPageMapSchema:
         return super().__call__(None)
