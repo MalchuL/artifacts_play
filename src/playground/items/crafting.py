@@ -7,8 +7,8 @@ from src.playground.items.item import Item, ItemType, Items
 
 
 class EffectType(Enum):
-    RESTORE = "restore"
-    BOOST = "boost_hp"
+    RESTORE_HP = "restore"
+    BOOST_HP = "boost_hp"
     HASTE = "haste"
     HP = "hp"
     # Skill

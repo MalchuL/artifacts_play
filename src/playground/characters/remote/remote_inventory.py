@@ -32,6 +32,18 @@ class RemoteInventory(Inventory):
         return equipment
 
     @property
+    def consumables_amount(self) -> Dict[EquipmentSlot, Items]:
+        state = self._state
+        consumables = {}
+        for slot in [Slot.consumable1, Slot.consumable2]:
+            item_code = getattr(state, slot.value + "_slot")
+            quantity = getattr(state, slot.value + "_slot_quantity")
+            if item_code and quantity:
+                item = Items(Item(code=item_code), quantity=quantity)
+                consumables[EquipmentSlot(slot.value)] = item
+        return consumables
+
+    @property
     def name(self) -> str:
         return self.__state.name
 

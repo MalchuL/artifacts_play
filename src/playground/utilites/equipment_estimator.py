@@ -12,10 +12,12 @@ from src.playground.monsters import DetailedMonster
 from src.playground.utilites.char_results import CharacterEstimator
 
 MAX_FIGHTS_LENGTH = 50
+HP_MULTIPLIER = 0.1
 
 class EquipmentEstimator:
-    def __init__(self, available_equipment: List[ItemDetails]):
+    def __init__(self, available_equipment: List[ItemDetails], use_consumables=True):
         self.available_equipment = available_equipment
+        self.use_consumables = use_consumables
 
     def get_value_multiplier(self, effect: ItemEffect):
         if effect.type in [EffectType.DAMAGE_FIRE, EffectType.DAMAGE_AIR, EffectType.DAMAGE_WATER,
@@ -31,7 +33,7 @@ class EquipmentEstimator:
             value = 0
         return value
 
-    def optimal_vs_monster(self, character: Character, monster: DetailedMonster):
+    def optimal_vs_monster(self, character: Character, monster: DetailedMonster) -> Dict[EquipmentSlot, ItemDetails]:
         # Constraint - sum of damage >= hp
         # Constrain sum of enemy atacks < char hp
         # It's a task of quadratic programming
@@ -40,6 +42,8 @@ class EquipmentEstimator:
                              ItemType.body_armor,
                              ItemType.amulet, ItemType.leg_armor, ItemType.boots, ItemType.ring,
                              ItemType.artifact]
+        if self.use_consumables:
+            target_items_type.append(ItemType.consumable)
         fighting_items = [item for item in self.available_equipment if
                           item.type in target_items_type]
 
@@ -109,10 +113,11 @@ class EquipmentEstimator:
                         item_effect += monster_attack.water * effect1.value * 0.01
                     case EffectType.RESIST_EARTH:
                         item_effect += monster_attack.earth * effect1.value * 0.01
-                    case EffectType.HP:
-                        item_effect += effect1.value / 10  # 10 is hyperparameter
+                    case EffectType.HP | EffectType.BOOST_HP | EffectType.RESTORE_HP:
+                        item_effect += effect1.value * HP_MULTIPLIER  # Is hyperparameter
             item_vector[i] += item_effect
-        additional_damage_matrix = np.maximum(additional_damage_matrix, additional_damage_matrix.transpose())  # Make it symmetrical
+        additional_damage_matrix = np.maximum(additional_damage_matrix,
+                                              additional_damage_matrix.transpose())  # Make it symmetrical
         #item_vector += np.random.rand(*item_vector.shape) * 0.005 / monster_hp
 
         # ----- Restricts -------
@@ -133,6 +138,37 @@ class EquipmentEstimator:
             if sum(condition_vector) > 0.5:
                 condition_matrix.append(condition_vector)
                 less_conditions.append(less_condition)
+        # # Condition not to lose monster in 50 turns
+        # damage_per_turn = monster_attack.fire + monster_attack.air + monster_attack.water + monster_attack.earth
+        # condition_vector = np.ones(len(fighting_items)) * damage_per_turn
+        # for i, item in enumerate(fighting_items):
+        #     item_effect = 0
+        #     for effect in item.effects:
+        #         match effect.type:
+        #             # Character can longer fights
+        #             # Maximize blocked damage to monster attack
+        #             case EffectType.RESIST_FIRE:
+        #                 item_effect += monster_attack.fire * effect.value * 0.01
+        #             case EffectType.RESIST_AIR:
+        #                 item_effect += monster_attack.air * effect.value * 0.01
+        #             case EffectType.RESIST_WATER:
+        #                 item_effect += monster_attack.water * effect.value * 0.01
+        #             case EffectType.RESIST_EARTH:
+        #                 item_effect += monster_attack.earth * effect.value * 0.01
+        #             case EffectType.HP:
+        #                 item_effect += effect1.value / MAX_FIGHTS_LENGTH / 2  # 25 steps for character
+        #
+        #
+        #     less_condition = 1
+        #     if item_type == ItemType.ring:
+        #         less_condition = 2
+        #     elif item_type == ItemType.artifact:
+        #         less_condition = 3
+        #     if sum(condition_vector) > 0.5:
+        #         condition_matrix.append(condition_vector)
+        #         less_conditions.append(less_condition)
+        #
+
         condition_matrix = np.stack(condition_matrix)
         less_conditions = np.array(less_conditions)
         #condition_matrix += np.random.rand(*condition_matrix.shape) * 0.005
@@ -184,5 +220,9 @@ class EquipmentEstimator:
                 for i, artifact in enumerate(sorted_values[:3]):
                     slot = EquipmentSlot(ItemType.artifact.value + str(i+1))
                     equipped_item[slot] = artifact[0]
+            if item_type == ItemType.consumable:
+                for i, consumable in enumerate(sorted_values[:2]):
+                    slot = EquipmentSlot(ItemType.consumable.value + str(i+1))
+                    equipped_item[slot] = consumable[0]
 
         return equipped_item

@@ -38,3 +38,17 @@ def test_equipment_all_items_estimator(monster_name):
 
     pprint(simulator.optimal_vs_monster(character,
                                        monster.get_monster_info(monster.monster_from_id(monster_name))))
+
+
+@pytest.mark.parametrize('monster_name', ['chicken'])
+def test_equipment_all_items_estimator(monster_name):
+    char_name = settings.CHARACTERS[0]
+    client = AuthenticatedClient(base_url=settings.API_HOST, token=settings.API_TOKEN)
+    character: Character = RestApiCharacter(char_name, client=client)
+    monster = RestApiMonsterManager(client=client)
+    items: ItemCraftingInfoManager = RestApiItemCraftingInfoManager(client=client)
+    simulator = EquipmentEstimator([item for item in items.items if item.code == 'copper_dagger'])
+
+    pprint(simulator.optimal_vs_monster(character,
+                                        monster.get_monster_info(
+                                            monster.monster_from_id(monster_name))))

@@ -1,6 +1,7 @@
 from typing import Union
 
 from src.rest_api_client.api.named_classes import ObjectCodeRequest
+from src.rest_api_client.errors import ArtifactsHTTPStatusError
 from src.rest_api_client.model import DataPageSimpleItemSchema, \
     SimpleItemSchema, BankResponseSchema
 from src.rest_api_client.requests.single_artifacts_request import SingleArtifactsRequest
@@ -49,4 +50,7 @@ class GetBankItem(ObjectCodeRequest):
 
     def __call__(self) -> SimpleItemSchema:
         schema: DataPageSimpleItemSchema = super().__call__(None)
-        return schema.data[0]
+        if schema.data:
+            return schema.data[0]
+        else:
+            raise ArtifactsHTTPStatusError(status_code=404, content=b"Item not found", json={})

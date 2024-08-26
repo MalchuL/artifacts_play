@@ -38,3 +38,11 @@ def test_item_search(world):
     print(finder.find_item_in_bank(Item("copper_ore")))
     print(finder.find_item_in_crafts(Item("copper_ore")))
     print(finder.find_item_in_crafts(Item("copper")))
+
+
+def test_stick(world):
+    finder = ItemFinder(world)
+    print(finder.find_item_in_bank(Item("wooden_stick")))
+    print(finder.find_item_in_resources(Item("wooden_stick")))
+    print(finder.find_item_in_crafts(Item("wooden_stick")))
+    print(finder.find_item_in_monsters(Item("wooden_stick")))

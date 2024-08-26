@@ -4,8 +4,7 @@ from pprint import pprint
 import pytest
 from dynaconf import settings
 
-from src.playground.characters.character import Character
-from src.playground.characters.remote.rest_api_character import RestApiCharacter
+
 from src.playground.items.item_crafting import ItemCraftingInfoManager
 from src.playground.items.remote.rest_api_crafting import RestApiItemCraftingInfoManager
 from src.rest_api_client.client import AuthenticatedClient

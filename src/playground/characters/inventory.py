@@ -36,6 +36,11 @@ class Inventory(ABC):
 
     @property
     @abstractmethod
+    def consumables_amount(self) -> Dict[EquipmentSlot, Items]:
+        pass
+
+    @property
+    @abstractmethod
     def max_inventory_amount(self) -> int:
         """
         Amount of all items
