@@ -1,4 +1,5 @@
-from collections import deque
+import logging
+from collections import deque, Counter
 from dataclasses import dataclass, field
 from pprint import pprint
 from typing import List, Optional, Dict
@@ -10,6 +11,7 @@ from pyvis.network import Network
 
 from src.playground.characters import SkillType, EquipmentSlot
 from src.playground.characters.proxy.proxy_character import ProxyCharacter
+from src.playground.constants import SKILL_MAX_LEVEL, CHARACTER_MAX_LEVEL
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Item
 from src.playground.items.crafting import ItemDetails
@@ -17,9 +19,10 @@ from src.playground.monsters import Monster
 from src.playground.resources import Resource
 from src.playground.utilites.equipment_estimator import EquipmentEstimator
 from src.playground.utilites.fight_results import FightEstimator
+from src.playground.utilites.np_hard_equipment_estimator import NPHardEquipmentEstimator
 
-SKILL_MAX_LEVEL = 30
-CHARACTER_MAX_LEVEL = 30
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,12 +37,18 @@ class SkillInfo:
 
 
 @dataclass
+class TaskInfo:
+    level: int
+
+
+@dataclass
 class NodeInfo:
     target_item: Optional[Item] = None
     skill_info: Optional[SkillInfo] = None
     resource_info: Optional[Resource] = None
     monster_info: Optional[Monster] = None
     character_info: Optional[CharacterInfo] = None
+    task_info: Optional[TaskInfo] = None
 
 
 @dataclass
@@ -68,7 +77,7 @@ def get_code(node_info: NodeInfo):
     code = None
     codes = [node_info.target_item is not None, node_info.resource_info is not None,
              node_info.monster_info is not None, node_info.skill_info is not None,
-             node_info.character_info is not None]
+             node_info.character_info is not None, node_info.task_info is not None]
     assert sum(codes) == 1, codes
     if node_info.target_item:
         code = f"item:{node_info.target_item.code}"
@@ -81,6 +90,8 @@ def get_code(node_info: NodeInfo):
         code = f"{skill.skill.value}:{skill.level}"
     elif node_info.character_info is not None:
         code = f"character:{node_info.character_info.level}"
+    elif node_info.task_info is not None:
+        code = f"task:{node_info.task_info.level}"
     return code
 
 
@@ -89,6 +100,7 @@ class ResourcesRoadmap:
         self.items = items
         self.world = world
         self.winrate = winrate
+        self.readable = False
 
     def _resource_roadmap(self, root_node: NodeInfo, graph: nx.DiGraph,
                           nodes_dict: Dict[str, NodeInfo]):
@@ -113,9 +125,17 @@ class ResourcesRoadmap:
                                 nodes_dict[drop_code] = drop_node
                                 graph.add_edge(get_code(resource_node), drop_code)
                 if has_resource_at_level:
-                    nodes_dict[get_code(skill_node)] = skill_node
-                    graph.add_edge(get_code(parent_node), get_code(skill_node))
-                    parent_node = skill_node
+                    if self.readable:
+                        # Make graph readable
+                        character_node = NodeInfo(character_info=CharacterInfo(level=level))
+                        nodes_dict[get_code(skill_node)] = skill_node
+                        graph.add_edge(get_code(character_node), get_code(skill_node))
+                        graph.add_edge(get_code(parent_node), get_code(skill_node))
+                        parent_node = skill_node
+                    else:
+                        nodes_dict[get_code(skill_node)] = skill_node
+                        graph.add_edge(get_code(parent_node), get_code(skill_node))
+                        parent_node = skill_node
 
     def _recursive_craft(self, root_node: NodeInfo, graph: nx.DiGraph,
                          nodes_dict: Dict[str, NodeInfo]):
@@ -128,7 +148,13 @@ class ResourcesRoadmap:
                 if level_items:
                     skill_node = NodeInfo(skill_info=SkillInfo(level=level, skill=skill_type))
                     nodes_dict[get_code(skill_node)] = skill_node
-                    graph.add_edge(get_code(parent_node), get_code(skill_node))
+                    if self.readable:
+                        # Make graph readable
+                        character_node = NodeInfo(character_info=CharacterInfo(level=level))
+                        graph.add_edge(get_code(character_node), get_code(skill_node))
+                        graph.add_edge(get_code(parent_node), get_code(skill_node))
+                    else:
+                        graph.add_edge(get_code(parent_node), get_code(skill_node))
                     for level_item in level_items:
                         item_node = NodeInfo(target_item=level_item)
                         crafted_item_code = get_code(item_node)
@@ -145,6 +171,20 @@ class ResourcesRoadmap:
                                remaining_nodes: List[str]):
         available_nodes = available_nodes.copy()
         nodes_queue = deque(remaining_nodes)
+        # Check nodes
+        for edge in graph.edges():
+
+            assert isinstance(edge, (list, tuple))
+            assert edge[0] != edge[1], edge
+        counter = Counter(nodes_queue)
+        has_duplicate = False
+        for node, count in counter.items():
+            if count > 1:
+                has_duplicate = True
+                print(f"Node {node} is duplicated")
+        if has_duplicate:
+            raise ValueError("Node is duplicated")
+
         # Update available_items
         while len(nodes_queue) > 0:
             is_all_not_complete = True
@@ -165,7 +205,6 @@ class ResourcesRoadmap:
                 break
 
             current_node = nodes_queue.pop()
-
             is_complete = True
             # If all predecessors is complete we can move forward
             for succ in graph.predecessors(current_node):
@@ -176,7 +215,8 @@ class ResourcesRoadmap:
             if is_complete:
                 available_nodes.append(current_node)
                 for adj_node in graph.neighbors(current_node):
-                    nodes_queue.append(adj_node)
+                    if adj_node not in nodes_queue: # and adj_node not in available_nodes:  # Loop condition
+                        nodes_queue.append(adj_node)
             else:
                 nodes_queue.appendleft(current_node)
 
@@ -197,7 +237,8 @@ class ResourcesRoadmap:
                 self.world.item_details.get_item(nodes_dict[node_info].target_item) for
                 node_info in available_nodes if nodes_dict[node_info].target_item is not None]
 
-            equipment_estimator = EquipmentEstimator(available_items)
+            # Fast estimation
+            equipment_estimator = EquipmentEstimator(available_items, use_consumables=False)
             optimal_equipment = equipment_estimator.optimal_vs_monster(None,
                                                                        monster=monster)
             proxy_character = ProxyCharacter(monster.stats.level,
@@ -210,12 +251,52 @@ class ResourcesRoadmap:
                   simulation_results.result.monster_hp, simulation_results.result.character_hp,
                   simulation_results.result.turns, simulation_results.result.spent_consumables,
                   {slot: value.code for slot, value in optimal_equipment.items()})
+            # Long estimation if monster hasn't been beaten
+            if simulation_results.success_rate < self.winrate:
+                # In first we try to find only consumables
+                for initial_equipment in [optimal_equipment, None]:
+                    np_hard_estimator = NPHardEquipmentEstimator(self.world, available_items,
+                                                                 use_consumables=True,
+                                                                 winrate=self.winrate,
+                                                                 initial_equipment=initial_equipment,
+                                                                 max_equipment_count=1)
+                    optimal_equipment = np_hard_estimator.optimal_vs_monster(proxy_character,
+                                                                                 monster)
+                    proxy_character = ProxyCharacter(monster.stats.level,
+                                                     optimal_equipment,
+                                                     world=self.world)
+                    simulation_results = fight_estimator.simulate_fights(proxy_character, monster)
+                    print("NP Hard Estimation")
+                    print(proxy_character.stats)
+                    print(monster.stats)
+                    print(monster.code, monster.stats.level, simulation_results.success_rate,
+                          simulation_results.result.monster_hp, simulation_results.result.character_hp,
+                          simulation_results.result.turns, simulation_results.result.spent_consumables,
+                          {slot: value.code for slot, value in optimal_equipment.items()})
+                    if simulation_results.success_rate >= self.winrate:
+                        break
+                assert simulation_results.success_rate >= self.winrate, simulation_results.success_rate
+
             # We think monster has been beaten
             # Add monster node
             monster_node = NodeInfo(monster_info=monster)
-            graph.add_edge(get_code(root_node), get_code(monster_node))
+            character_node = NodeInfo(character_info=CharacterInfo(level=monster.stats.level))
+            nodes_dict[get_code(character_node)] = character_node
+            graph.add_edge(get_code(character_node), get_code(monster_node))
+            # Add dependency that we get next level only when monster is beaaten
+            if monster.stats.level + 1 < CHARACTER_MAX_LEVEL:
+                next_character_node = NodeInfo(character_info=CharacterInfo(level=monster.stats.level + 1))
+                graph.add_edge(get_code(monster_node), get_code(next_character_node))
+
+            # TODO fix recursion # Adds required items to beat
+            # for item in optimal_equipment.values():
+            #     item_node = NodeInfo(target_item=item)
+            #     graph.add_edge(get_code(item_node), get_code(monster_node))
+
+
             nodes_dict[get_code(monster_node)] = monster_node
             remaining_nodes.append(get_code(monster_node))
+            remaining_nodes.append(get_code(character_node))
             # Can add drops
             for drop in monster.drops:
                 drop_node = NodeInfo(target_item=drop.item)
@@ -224,18 +305,47 @@ class ResourcesRoadmap:
                 if get_code(drop_node) not in nodes_dict:
                     nodes_dict[get_code(drop_node)] = drop_node
 
-            root_node = monster_node
-            # TOOD add dependency of items to beat
+            # root_node = character_node
+
+    def _task_roadmap(self, graph: nx.DiGraph, nodes_dict: Dict[str, NodeInfo]):
+        items_from_task = self.world.item_details.items
+        task_items = [item for item in items_from_task if item.subtype == "task"]
+        assert task_items, "Task items can't be found, reimplement this"
+        for item in task_items:
+            character_node = NodeInfo(character_info=CharacterInfo(level=item.level))
+            task_node = NodeInfo(task_info=TaskInfo(level=item.level))
+            graph.add_edge(get_code(character_node), get_code(task_node))
+            nodes_dict[get_code(task_node)] = task_node
+
+            item_node = NodeInfo(target_item=item)
+            graph.add_edge(get_code(task_node), get_code(item_node))
+            nodes_dict[get_code(item_node)] = item_node
+
 
     def create_items_roadmap(self):
 
         root_node = NodeInfo(character_info=CharacterInfo(1))
         DG = nx.DiGraph()
         nodes_dict: Dict[str, NodeInfo] = {get_code(root_node): root_node}
-        DG.add_node(get_code(root_node), **to_json(root_node))
+
+        parent_node = root_node
+        for i in range(2, CHARACTER_MAX_LEVEL+1):
+            character_node = NodeInfo(character_info=CharacterInfo(level=i))
+            nodes_dict[get_code(character_node)] = character_node
+            DG.add_edge(get_code(parent_node), get_code(character_node))
+            parent_node = character_node
+
         self._resource_roadmap(root_node, DG, nodes_dict)
         self._recursive_craft(root_node, DG, nodes_dict)
+        self._task_roadmap(DG, nodes_dict)
         self._recursive_monsters(root_node, DG, nodes_dict)
+        has_disconnected_nodes = False
+        for node in DG.nodes():
+            if DG.predecessors(node) == 0:
+                logger.warning(f"Node {node} is not connected")
+                has_disconnected_nodes = True
+        if has_disconnected_nodes:
+            raise Exception("Disconnected nodes")
         return DG, nodes_dict
 
 

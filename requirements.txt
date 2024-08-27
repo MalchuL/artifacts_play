@@ -4,3 +4,5 @@ requests
 datamodel-code-generator
 numpy
 qpsolvers[osqp]
+networkx
+matplotlib

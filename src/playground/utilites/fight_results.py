@@ -6,12 +6,12 @@ from typing import List, Dict
 
 from src.playground.characters import Character, EquipmentSlot
 from src.playground.characters.character import Result, FightResult
+from src.playground.constants import MAX_FIGHTS_LENGTH, TURN_COOLDOWN
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items.crafting import EffectType
 from src.playground.monsters import DetailedMonster
 
 PERCENT_MULTIPLIER = 0.01
-TURN_COOLDOWN = 2
 
 
 @dataclass
@@ -29,7 +29,7 @@ class FightSimulationResult:
 
 class FightEstimator:
 
-    def __init__(self, world: PlaygroundWorld, max_turns=50, simulate_fights_number=30):
+    def __init__(self, world: PlaygroundWorld, max_turns=MAX_FIGHTS_LENGTH, simulate_fights_number=30):
         self._max_turns = max_turns
         self._simulate_fights_number = simulate_fights_number
         self._world = world
@@ -72,6 +72,35 @@ class FightEstimator:
         consumables = copy.deepcopy(character.inventory.consumables_amount)
         consumables_count = {slot: 0 for slot, cons in consumables.items()}
 
+        boost_fire = 0
+        boost_water = 0
+        boost_earth = 0
+        boost_air = 0
+
+        for slot, consumable in character.inventory.consumables_amount.items():
+            if consumables_count[slot] > consumables[slot].quantity:
+                continue
+            apply = False
+            for effect in self._world.item_details.get_item(consumable.item).effects:
+                if effect.type == EffectType.BOOST_HP:
+                    character_hp += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_DAMAGE_FIRE:
+                    boost_fire += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_DAMAGE_AIR:
+                    boost_air += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_DAMAGE_WATER:
+                    boost_water += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_DAMAGE_EARTH:
+                    boost_earth += effect.value
+                    apply = True
+            if apply:
+                consumables_count[slot] += 1
+
+
         max_character_hp = character_hp
 
         i = 0
@@ -85,11 +114,11 @@ class FightEstimator:
                 # Calculate resisted damage
                 monster_attack_fire -= self._calculate_resist(monster_attack_fire,
                                                               character_stats.resistance.fire)
-                monster_attack_water -= self._calculate_resist(monster_attack_fire,
+                monster_attack_water -= self._calculate_resist(monster_attack_water,
                                                                character_stats.resistance.water)
-                monster_attack_air -= self._calculate_resist(monster_attack_fire,
+                monster_attack_air -= self._calculate_resist(monster_attack_air,
                                                              character_stats.resistance.air)
-                monster_attack_earth -= self._calculate_resist(monster_attack_fire,
+                monster_attack_earth -= self._calculate_resist(monster_attack_earth,
                                                                character_stats.resistance.earth)
                 log_string = "Turn {turn}: The monster used {elemental} attack and dealt {damage} damage."
                 # Calculate block probability
@@ -131,21 +160,21 @@ class FightEstimator:
             else:
                 # Character turn
                 character_attack_fire = self._calculate_damage(character_stats.attack.fire,
-                                                               character_stats.perc_damage.fire)
+                                                               character_stats.perc_damage.fire + boost_fire)
                 character_attack_water = self._calculate_damage(character_stats.attack.water,
-                                                                character_stats.perc_damage.water)
+                                                                character_stats.perc_damage.water + boost_water)
                 character_attack_air = self._calculate_damage(character_stats.attack.air,
-                                                              character_stats.perc_damage.air)
+                                                              character_stats.perc_damage.air + boost_air)
                 character_attack_earth = self._calculate_damage(character_stats.attack.earth,
-                                                                character_stats.perc_damage.earth)
+                                                                character_stats.perc_damage.earth + boost_earth)
                 # Calculate resisted damage
                 character_attack_fire -= self._calculate_resist(character_attack_fire,
                                                                 monster_stats.resistance.fire)
-                character_attack_water -= self._calculate_resist(character_attack_fire,
+                character_attack_water -= self._calculate_resist(character_attack_water,
                                                                  monster_stats.resistance.water)
-                character_attack_air -= self._calculate_resist(character_attack_fire,
+                character_attack_air -= self._calculate_resist(character_attack_air,
                                                                monster_stats.resistance.air)
-                character_attack_earth -= self._calculate_resist(character_attack_fire,
+                character_attack_earth -= self._calculate_resist(character_attack_earth,
                                                                  monster_stats.resistance.earth)
                 log_string = "Turn {turn}: The character used {elemental} attack and dealt {damage} damage."
                 # Calculate block probability

@@ -11,11 +11,10 @@ from src.playground.items.crafting import EffectType, ItemDetails, ItemEffect
 from src.playground.monsters import DetailedMonster
 from src.playground.utilites.char_results import CharacterEstimator
 
-MAX_FIGHTS_LENGTH = 50
 HP_MULTIPLIER = 0.1
 
 class EquipmentEstimator:
-    def __init__(self, available_equipment: List[ItemDetails], use_consumables=True):
+    def __init__(self, available_equipment: List[ItemDetails], use_consumables=False):
         self.available_equipment = available_equipment
         self.use_consumables = use_consumables
 

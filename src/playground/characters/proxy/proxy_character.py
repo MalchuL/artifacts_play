@@ -1,7 +1,7 @@
 from typing import Optional, Dict
 
 from src.playground.characters import Character, FightResult, CharacterStats, CharacterQuest, \
-    Inventory, Attack, Resistance, PercentDamage, EquipmentSlot
+    Inventory, Attack, Resistance, PercentDamage, EquipmentSlot, Level
 from src.playground.characters.character import HarvestResult
 from src.playground.characters.proxy.proxy_inventory import ProxyInventory
 from src.playground.fabric.playground_world import PlaygroundWorld
@@ -81,7 +81,7 @@ class ProxyCharacter(Character):
                     case EffectType.HP:
                         hp += effect.value
         stats = CharacterStats(hp=hp,
-                               level=self._level,
+                               level=Level(level=self._level, xp=0, max_xp=0),
                                attack=Attack(fire=attack_fire,
                                              air=attack_air,
                                              water=attack_water,
