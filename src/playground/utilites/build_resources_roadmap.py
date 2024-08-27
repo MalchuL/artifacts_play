@@ -231,6 +231,12 @@ class ResourcesRoadmap:
         remaining_nodes = available_nodes.copy()
 
         for monster in sorted(monsters, key=lambda mnstr: mnstr.stats.level):
+            # Check for cycles
+            graph_cycles = list(nx.simple_cycles(graph))
+            if graph_cycles:
+                logger.warning(f"Graph contains cycles: {graph_cycles}")
+                raise ValueError("Graph contains cycles")
+
             available_nodes, remaining_nodes = self._find_accessible_nodes(graph, available_nodes, remaining_nodes)
             available_nodes, remaining_nodes = list(set(available_nodes)), list(set(remaining_nodes))
             available_items = [
@@ -285,13 +291,20 @@ class ResourcesRoadmap:
             graph.add_edge(get_code(character_node), get_code(monster_node))
             # Add dependency that we get next level only when monster is beaaten
             if monster.stats.level + 1 < CHARACTER_MAX_LEVEL:
-                next_character_node = NodeInfo(character_info=CharacterInfo(level=monster.stats.level + 1))
+                next_character_node = NodeInfo(
+                    character_info=CharacterInfo(level=monster.stats.level + 1))
                 graph.add_edge(get_code(monster_node), get_code(next_character_node))
 
-            # TODO fix recursion # Adds required items to beat
-            # for item in optimal_equipment.values():
-            #     item_node = NodeInfo(target_item=item)
-            #     graph.add_edge(get_code(item_node), get_code(monster_node))
+            print([item.name for item in optimal_equipment.values()])
+            for item in optimal_equipment.values():
+                item_node = NodeInfo(target_item=item)
+                graph.add_edge(get_code(item_node), get_code(monster_node))
+
+            # TODO add this only if monster can't be beaten and consumables wouldn't be used
+            for task_item_node in self._task_roadmap(level=monster.stats.level, graph=graph,
+                                                nodes_dict=nodes_dict):
+                if get_code(task_item_node) not in available_nodes:
+                    remaining_nodes.append(get_code(task_item_node))
 
 
             nodes_dict[get_code(monster_node)] = monster_node
@@ -300,17 +313,17 @@ class ResourcesRoadmap:
             # Can add drops
             for drop in monster.drops:
                 drop_node = NodeInfo(target_item=drop.item)
-                graph.add_edge(get_code(monster_node), get_code(drop_node))
-                remaining_nodes.append(get_code(drop_node))
                 if get_code(drop_node) not in nodes_dict:
+                    graph.add_edge(get_code(monster_node), get_code(drop_node))
+                    remaining_nodes.append(get_code(drop_node))
                     nodes_dict[get_code(drop_node)] = drop_node
 
             # root_node = character_node
 
-    def _task_roadmap(self, graph: nx.DiGraph, nodes_dict: Dict[str, NodeInfo]):
+    def _task_roadmap(self, level:int, graph: nx.DiGraph, nodes_dict: Dict[str, NodeInfo]):
         items_from_task = self.world.item_details.items
-        task_items = [item for item in items_from_task if item.subtype == "task"]
-        assert task_items, "Task items can't be found, reimplement this"
+        task_items = [item for item in items_from_task if item.subtype == "task" and item.level <= level]
+        new_nodes = []
         for item in task_items:
             character_node = NodeInfo(character_info=CharacterInfo(level=item.level))
             task_node = NodeInfo(task_info=TaskInfo(level=item.level))
@@ -320,6 +333,9 @@ class ResourcesRoadmap:
             item_node = NodeInfo(target_item=item)
             graph.add_edge(get_code(task_node), get_code(item_node))
             nodes_dict[get_code(item_node)] = item_node
+
+            new_nodes.append(item_node)
+        return new_nodes
 
 
     def create_items_roadmap(self):
@@ -337,7 +353,6 @@ class ResourcesRoadmap:
 
         self._resource_roadmap(root_node, DG, nodes_dict)
         self._recursive_craft(root_node, DG, nodes_dict)
-        self._task_roadmap(DG, nodes_dict)
         self._recursive_monsters(root_node, DG, nodes_dict)
         has_disconnected_nodes = False
         for node in DG.nodes():
@@ -346,11 +361,26 @@ class ResourcesRoadmap:
                 has_disconnected_nodes = True
         if has_disconnected_nodes:
             raise Exception("Disconnected nodes")
+
+        # Remove useless nodes
+        DG.remove_node("item:wooden_stick")
+        # Check that all nodes are connected
+        for node in DG.nodes():
+            assert node in nodes_dict, f"node: {node} not in nodes_dict"
+
         return DG, nodes_dict
 
 
-def graph(graph: nx.DiGraph):
-    nt = Network("1080px", "1920px", directed=True, neighborhood_highlight=True, select_menu=True, filter_menu=True)
+def graph(graph: nx.DiGraph, reduce: bool = False):
+    nt = Network("1080px", "1920px", directed=True, neighborhood_highlight=True, select_menu=True,
+                 filter_menu=True)
+    if reduce:
+        graph = graph.copy()
+        for node in list(graph.nodes()):
+            if not list(graph.successors(node)):
+                graph.remove_node(node)
+
+
     nt.from_nx(graph)
     nt.show("nx.html", notebook=False)
     # nx.draw(graph, with_labels=True, font_weight='bold')
