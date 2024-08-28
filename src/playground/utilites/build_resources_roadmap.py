@@ -224,7 +224,7 @@ class ResourcesRoadmap:
     def _recursive_monsters(self, root_node: NodeInfo, graph: nx.DiGraph,
                             nodes_dict: Dict[str, NodeInfo]):
         monsters = self.world.monsters.monsters
-        fight_estimator = FightEstimator(world=self.world)
+        fight_estimator = FightEstimator(world=self.world, simulate_fights_number=100)
 
         available_nodes = [get_code(root_node)]
         remaining_nodes = available_nodes.copy()
@@ -235,6 +235,9 @@ class ResourcesRoadmap:
             if graph_cycles:
                 logger.error(f"Graph contains cycles: {graph_cycles}")
                 raise ValueError("Graph contains cycles")
+
+            logger.info("-" * 20)
+            logger.info(f"Try to find optimal with monster: {monster.name}")
 
             # 1. Check monster can be beaten by optimal equipment and maybe consumables
             # 2. Check monster can be beaten by task items (which are very rare) and maybe consumables
@@ -272,6 +275,8 @@ class ResourcesRoadmap:
                                 f"in turns={simulation_results.result.turns}, "
                                 f"items={[value.code for value in optimal_equipment.values()]}")
                     break
+                else:
+                    logger.error(f"Can't found optimal equipment, current={[item.name for item in optimal_equipment.values()]}")
                 # Long estimation if monster hasn't been beaten with consumables
                 if simulation_results.success_rate < self.winrate:
                     logger.info(f"NP Hard Estimation, {is_add_task_items=}, {use_np_hard=}, current_winrate={simulation_results.success_rate}")
@@ -334,6 +339,9 @@ class ResourcesRoadmap:
                     remaining_nodes.append(get_code(drop_node))
                     nodes_dict[get_code(drop_node)] = drop_node
 
+            logger.info(f"Finish with monster: {monster}")
+            logger.info("-" * 20)
+
 
     def _task_roadmap(self, level:int, graph: nx.DiGraph, nodes_dict: Dict[str, NodeInfo]):
         items_from_task = self.world.item_details.items
@@ -350,7 +358,7 @@ class ResourcesRoadmap:
             graph.add_edge(get_code(task_node), item_code)
             nodes_dict[item_code] = item_node
 
-            new_nodes.append(item_node)
+            new_nodes.append(task_node)
         return new_nodes
 
 
