@@ -1,7 +1,6 @@
 import logging
 from collections import deque, Counter
 from dataclasses import dataclass, field
-from pprint import pprint
 from typing import List, Optional, Dict
 
 import networkx as nx
@@ -96,7 +95,7 @@ def get_code(node_info: NodeInfo):
 
 
 class ResourcesRoadmap:
-    def __init__(self, world: PlaygroundWorld, items: List[ItemDetails], winrate=0.95):
+    def __init__(self, world: PlaygroundWorld, items: List[ItemDetails], winrate=0.99):
         self.items = items
         self.world = world
         self.winrate = winrate
@@ -181,7 +180,7 @@ class ResourcesRoadmap:
         for node, count in counter.items():
             if count > 1:
                 has_duplicate = True
-                print(f"Node {node} is duplicated")
+                logger.error(f"Node {node} is duplicated")
         if has_duplicate:
             raise ValueError("Node is duplicated")
 
@@ -234,33 +233,54 @@ class ResourcesRoadmap:
             # Check for cycles
             graph_cycles = list(nx.simple_cycles(graph))
             if graph_cycles:
-                logger.warning(f"Graph contains cycles: {graph_cycles}")
+                logger.error(f"Graph contains cycles: {graph_cycles}")
                 raise ValueError("Graph contains cycles")
 
-            available_nodes, remaining_nodes = self._find_accessible_nodes(graph, available_nodes, remaining_nodes)
-            available_nodes, remaining_nodes = list(set(available_nodes)), list(set(remaining_nodes))
-            available_items = [
-                self.world.item_details.get_item(nodes_dict[node_info].target_item) for
-                node_info in available_nodes if nodes_dict[node_info].target_item is not None]
+            # 1. Check monster can be beaten by optimal equipment and maybe consumables
+            # 2. Check monster can be beaten by task items (which are very rare) and maybe consumables
+            # 3. Search as NP hard problem
+            for is_add_task_items, use_np_hard in zip([False, True, True], [False, False, True]):
 
-            # Fast estimation
-            equipment_estimator = EquipmentEstimator(available_items, use_consumables=False)
-            optimal_equipment = equipment_estimator.optimal_vs_monster(None,
-                                                                       monster=monster)
-            proxy_character = ProxyCharacter(monster.stats.level,
-                                             optimal_equipment,
-                                             world=self.world)
-            simulation_results = fight_estimator.simulate_fights(proxy_character, monster)
-            print(proxy_character.stats)
-            print(monster.stats)
-            print(monster.code, monster.stats.level, simulation_results.success_rate,
-                  simulation_results.result.monster_hp, simulation_results.result.character_hp,
-                  simulation_results.result.turns, simulation_results.result.spent_consumables,
-                  {slot: value.code for slot, value in optimal_equipment.items()})
-            # Long estimation if monster hasn't been beaten
-            if simulation_results.success_rate < self.winrate:
-                # In first we try to find only consumables
-                for initial_equipment in [optimal_equipment, None]:
+                if is_add_task_items:
+                    for task_item_node in self._task_roadmap(level=monster.stats.level, graph=graph,
+                                                             nodes_dict=nodes_dict):
+                        task_item_code = get_code(task_item_node)
+                        # It's possible that nodes already in queue
+                        if task_item_code not in available_nodes and task_item_code not in remaining_nodes:
+                            remaining_nodes.append(task_item_code)
+                logger.info(f"Try to find optimal with nodes: {is_add_task_items=}, {use_np_hard=}")
+
+                available_nodes, remaining_nodes = self._find_accessible_nodes(graph, available_nodes, remaining_nodes)
+                available_nodes, remaining_nodes = list(set(available_nodes)), list(set(remaining_nodes))
+                available_items = [
+                    self.world.item_details.get_item(nodes_dict[node_info].target_item) for
+                    node_info in available_nodes if nodes_dict[node_info].target_item is not None]
+
+                # Fast estimation
+                equipment_estimator = EquipmentEstimator(available_items, use_consumables=False)
+                optimal_equipment = equipment_estimator.optimal_vs_monster(None,
+                                                                           monster=monster)
+                proxy_character = ProxyCharacter(monster.stats.level,
+                                                 optimal_equipment,
+                                                 world=self.world)
+                simulation_results = fight_estimator.simulate_fights(proxy_character, monster)
+                if simulation_results.success_rate >= self.winrate:
+                    logger.info(f"monster={monster.name}:{monster.stats.level} has winrate "
+                                f"{simulation_results.success_rate}. At the final "
+                                f"monster_hp={simulation_results.result.monster_hp}<char_hp="
+                                f"{simulation_results.result.character_hp}, "
+                                f"in turns={simulation_results.result.turns}, "
+                                f"items={[value.code for value in optimal_equipment.values()]}")
+                    break
+                # Long estimation if monster hasn't been beaten with consumables
+                if simulation_results.success_rate < self.winrate:
+                    logger.info(f"NP Hard Estimation, {is_add_task_items=}, {use_np_hard=}, current_winrate={simulation_results.success_rate}")
+                    if use_np_hard:
+                        # Search with all equipment
+                        initial_equipment = None
+                    else:
+                        # Search with consumables
+                        initial_equipment = optimal_equipment
                     np_hard_estimator = NPHardEquipmentEstimator(self.world, available_items,
                                                                  use_consumables=True,
                                                                  winrate=self.winrate,
@@ -272,16 +292,18 @@ class ResourcesRoadmap:
                                                      optimal_equipment,
                                                      world=self.world)
                     simulation_results = fight_estimator.simulate_fights(proxy_character, monster)
-                    print("NP Hard Estimation")
-                    print(proxy_character.stats)
-                    print(monster.stats)
-                    print(monster.code, monster.stats.level, simulation_results.success_rate,
-                          simulation_results.result.monster_hp, simulation_results.result.character_hp,
-                          simulation_results.result.turns, simulation_results.result.spent_consumables,
-                          {slot: value.code for slot, value in optimal_equipment.items()})
                     if simulation_results.success_rate >= self.winrate:
+                        logger.info(f"monster={monster.name}:{monster.stats.level} has winrate "
+                                    f"{simulation_results.success_rate}. At the final "
+                                    f"monster_hp={simulation_results.result.monster_hp}<char_hp="
+                                    f"{simulation_results.result.character_hp}, "
+                                    f"in turns={simulation_results.result.turns}, "
+                                    f"items={[value.code for value in optimal_equipment.values()]}"
+                                    f"consumables={simulation_results.result.spent_consumables}")
                         break
-                assert simulation_results.success_rate >= self.winrate, simulation_results.success_rate
+
+            assert simulation_results.success_rate >= self.winrate, \
+                f"{simulation_results.success_rate}, Maybe rerun will help"
 
             # We think monster has been beaten
             # Add monster node
@@ -295,16 +317,10 @@ class ResourcesRoadmap:
                     character_info=CharacterInfo(level=monster.stats.level + 1))
                 graph.add_edge(get_code(monster_node), get_code(next_character_node))
 
-            print([item.name for item in optimal_equipment.values()])
+            logger.info(f"Used items={[item.name for item in optimal_equipment.values()]}")
             for item in optimal_equipment.values():
                 item_node = NodeInfo(target_item=item)
                 graph.add_edge(get_code(item_node), get_code(monster_node))
-
-            # TODO add this only if monster can't be beaten and consumables wouldn't be used
-            for task_item_node in self._task_roadmap(level=monster.stats.level, graph=graph,
-                                                nodes_dict=nodes_dict):
-                if get_code(task_item_node) not in available_nodes:
-                    remaining_nodes.append(get_code(task_item_node))
 
 
             nodes_dict[get_code(monster_node)] = monster_node
@@ -318,7 +334,6 @@ class ResourcesRoadmap:
                     remaining_nodes.append(get_code(drop_node))
                     nodes_dict[get_code(drop_node)] = drop_node
 
-            # root_node = character_node
 
     def _task_roadmap(self, level:int, graph: nx.DiGraph, nodes_dict: Dict[str, NodeInfo]):
         items_from_task = self.world.item_details.items
@@ -331,8 +346,9 @@ class ResourcesRoadmap:
             nodes_dict[get_code(task_node)] = task_node
 
             item_node = NodeInfo(target_item=item)
-            graph.add_edge(get_code(task_node), get_code(item_node))
-            nodes_dict[get_code(item_node)] = item_node
+            item_code = get_code(item_node)
+            graph.add_edge(get_code(task_node), item_code)
+            nodes_dict[item_code] = item_node
 
             new_nodes.append(item_node)
         return new_nodes
@@ -354,6 +370,9 @@ class ResourcesRoadmap:
         self._resource_roadmap(root_node, DG, nodes_dict)
         self._recursive_craft(root_node, DG, nodes_dict)
         self._recursive_monsters(root_node, DG, nodes_dict)
+        # Update for missed nodes
+        self._task_roadmap(CHARACTER_MAX_LEVEL, DG, nodes_dict)
+
         has_disconnected_nodes = False
         for node in DG.nodes():
             if DG.predecessors(node) == 0:
@@ -366,7 +385,8 @@ class ResourcesRoadmap:
         DG.remove_node("item:wooden_stick")
         # Check that all nodes are connected
         for node in DG.nodes():
-            assert node in nodes_dict, f"node: {node} not in nodes_dict"
+            assert node in nodes_dict, (f"node: {node} not in nodes_dict, try to change "
+                                        f"something maybe there is bug in hashable, keys={list(nodes_dict.keys())})")
 
         return DG, nodes_dict
 

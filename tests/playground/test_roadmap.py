@@ -14,4 +14,4 @@ def test_fight_simulation():
     target_item = Item("steel_boots")
     root_node, _ = roadmap.create_items_roadmap()
     matplotlib.use('Qt5Agg')
-    graph(root_node, reduce=True)
+    graph(root_node, reduce=False)

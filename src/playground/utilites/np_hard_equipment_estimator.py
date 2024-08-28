@@ -96,6 +96,7 @@ class NPHardEquipmentEstimator:
         equips = itertools.product(*items)
         print("wait for solution")
         max_winrate = 0
+        optimal_equipment = {}
         for equipment in equips:
             possible_optimal_equipment: Dict[EquipmentSlot, ItemDetails] = dict(zip(item_slots, equipment))
             for slot, equip in list(possible_optimal_equipment.items()):
@@ -138,9 +139,10 @@ class NPHardEquipmentEstimator:
             # Only for testing
             if fight_result.success_rate > max_winrate:
                 max_winrate = fight_result.success_rate
-                print("New max winrate", max_winrate)
-                print([item.name for item in possible_optimal_equipment.values()])
+                optimal_equipment = possible_optimal_equipment
+                logger.info(f"New max winrate {max_winrate}")
+                logger.info(f"New equipment {[item.name for item in possible_optimal_equipment.values()]}")
             if fight_result.success_rate >= self.winrate:
                 return possible_optimal_equipment
         logger.warning(f"No solution found for monster {monster.name}")
-        return {}
+        return optimal_equipment
