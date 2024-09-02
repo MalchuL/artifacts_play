@@ -60,12 +60,32 @@ class Skills:
     gearcrafting: SkillLevel
     jewelrycrafting: SkillLevel
 
+    def get_skill(self, skill_type: SkillType) -> SkillLevel:
+        match skill_type:
+            case SkillType.WOODCUTTING:
+                return self.woodcutting
+            case SkillType.FISHING:
+                return self.fishing
+            case SkillType.MINING:
+                return self.mining
+            case SkillType.COOKING:
+                return self.cooking
+            case SkillType.WEAPON_CRAFTING:
+                return self.weaponcrafting
+            case SkillType.GEAR_CRAFTING:
+                return self.gearcrafting
+            case SkillType.JEWERLY_CRAFTING:
+                return self.jewelrycrafting
+            case _:
+                raise ValueError(f"Unknown skill type {skill_type}")
+
 
 @dataclass(frozen=True)
 class Stats:
     hp: int
     attack: Attack
     resistance: Resistance
+
 
 @dataclass(frozen=True)
 class CharacterStats(Stats):
@@ -75,3 +95,4 @@ class CharacterStats(Stats):
     level: Level
     skills: Skills
     perc_damage: PercentDamage
+

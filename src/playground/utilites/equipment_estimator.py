@@ -6,10 +6,11 @@ from numpy.linalg import matrix_rank
 from qpsolvers import solve_qp, solve_ls
 
 from src.playground.characters import Character, EquipmentSlot
-from src.playground.items import ItemType
+from src.playground.constants import MAX_CONSUMABLES_EQUIPPED
+from src.playground.items import ItemType, Items
 from src.playground.items.crafting import EffectType, ItemDetails, ItemEffect
 from src.playground.monsters import DetailedMonster
-from src.playground.utilites.char_results import CharacterEstimator
+
 
 HP_MULTIPLIER = 0.1
 
@@ -32,7 +33,7 @@ class EquipmentEstimator:
             value = 0
         return value
 
-    def optimal_vs_monster(self, character: Character, monster: DetailedMonster) -> Dict[EquipmentSlot, ItemDetails]:
+    def optimal_vs_monster(self, character: Character, monster: DetailedMonster) -> Dict[EquipmentSlot, Items]:
         # Constraint - sum of damage >= hp
         # Constrain sum of enemy atacks < char hp
         # It's a task of quadratic programming
@@ -194,7 +195,7 @@ class EquipmentEstimator:
                      ub=upper_bound.astype(np.float64),
                      solver="piqp")
 
-        equipped_item: Dict[EquipmentSlot, ItemDetails] = {}
+        equipped_item: Dict[EquipmentSlot, Items] = {}
         for item_type in target_items_type:
             sorted_values = sorted(
                 [(fighting_item, x[i]) for i, fighting_item in enumerate(fighting_items) if
@@ -205,23 +206,23 @@ class EquipmentEstimator:
                 # We find corresponding items
                 if sorted_values:
                     slot = EquipmentSlot(item_type.value)
-                    equipped_item[slot] = sorted_values[0][0]
+                    equipped_item[slot] = Items(sorted_values[0][0], quantity=1)
             if item_type == ItemType.ring:
                 for i, item in enumerate(sorted_values[:2]):
                     if item[1] > 1.5:  # Higher than threshold equip same ring 2 times
-                        equipped_item[EquipmentSlot.RING1] = item[0]
-                        equipped_item[EquipmentSlot.RING2] = item[0]
+                        equipped_item[EquipmentSlot.RING1] = Items(item[0], quantity=1)
+                        equipped_item[EquipmentSlot.RING2] = Items(item[0], quantity=1)
                         break
                     else:
                         slot = EquipmentSlot(ItemType.ring.value + str(i+1))
-                        equipped_item[slot] = item[0]
+                        equipped_item[slot] = Items(item[0], quantity=1)
             if item_type == ItemType.artifact:
                 for i, artifact in enumerate(sorted_values[:3]):
                     slot = EquipmentSlot(ItemType.artifact.value + str(i+1))
-                    equipped_item[slot] = artifact[0]
+                    equipped_item[slot] = Items(artifact[0], quantity=1)
             if item_type == ItemType.consumable:
                 for i, consumable in enumerate(sorted_values[:2]):
                     slot = EquipmentSlot(ItemType.consumable.value + str(i+1))
-                    equipped_item[slot] = consumable[0]
+                    equipped_item[slot] = Items(consumable[0], MAX_CONSUMABLES_EQUIPPED)
 
         return equipped_item

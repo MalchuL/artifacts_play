@@ -5,13 +5,13 @@ from src.playground.characters import Character, FightResult, CharacterStats, Ch
 from src.playground.characters.character import HarvestResult
 from src.playground.characters.proxy.proxy_inventory import ProxyInventory
 from src.playground.fabric.playground_world import PlaygroundWorld
-from src.playground.items import Item
+from src.playground.items import Item, Items
 from src.playground.items.crafting import EffectType
 from src.playground.utilites.char_results import CharacterEstimator
 
 
 class ProxyCharacter(Character):
-    def __init__(self, level, equipment: Dict[EquipmentSlot, Optional[Item]],
+    def __init__(self, level, equipment: Dict[EquipmentSlot, Items],
                  world: PlaygroundWorld):
         super().__init__("proxy")
         self._level = level
@@ -47,7 +47,7 @@ class ProxyCharacter(Character):
 
         for slot, equip in equipment.items():
 
-            item_details = self._world.item_details.get_item(equip)
+            item_details = self._world.item_details.get_item(equip.item)
             for effect in item_details.effects:
                 match effect.type:
                     # Attack

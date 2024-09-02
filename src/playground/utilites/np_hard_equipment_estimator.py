@@ -4,9 +4,10 @@ from typing import List, Dict
 
 from src.playground.characters import Character, EquipmentSlot
 from src.playground.characters.proxy.proxy_character import ProxyCharacter
+from src.playground.constants import MAX_CONSUMABLES_EQUIPPED
 from src.playground.errors import NotFoundException
 from src.playground.fabric.playground_world import PlaygroundWorld
-from src.playground.items import ItemType
+from src.playground.items import ItemType, Items, Item
 from src.playground.items.crafting import EffectType, ItemDetails, ItemEffect
 from src.playground.monsters import DetailedMonster
 from src.playground.utilites.fight_results import FightEstimator
@@ -20,7 +21,7 @@ class NPHardEquipmentEstimator:
     NP Hard version of best equipment estimation
     """
 
-    def __init__(self, world: PlaygroundWorld, available_equipment: List[ItemDetails], initial_equipment: Dict[EquipmentSlot, ItemDetails] = None,
+    def __init__(self, world: PlaygroundWorld, available_equipment: List[ItemDetails], initial_equipment: Dict[EquipmentSlot, Items] = None,
                  use_consumables=True, winrate: float = 0.9, max_equipment_count=MAX_EQUIPMENT_COUNT):
         self.available_equipment = available_equipment
         self.use_consumables = use_consumables
@@ -29,7 +30,7 @@ class NPHardEquipmentEstimator:
         self.max_equipment_count = max_equipment_count
         self.initial_equipment = initial_equipment
 
-    def optimal_vs_monster(self, character: Character, monster: DetailedMonster) -> Dict[EquipmentSlot, ItemDetails]:
+    def optimal_vs_monster(self, character: Character, monster: DetailedMonster) -> Dict[EquipmentSlot, Items]:
 
         target_items_type = [ItemType.weapon, ItemType.helmet, ItemType.shield,
                              ItemType.body_armor,
@@ -40,7 +41,7 @@ class NPHardEquipmentEstimator:
         fighting_items = [item for item in self.available_equipment if
                           item.type in target_items_type]
         items_mapping = {item.code: item for item in fighting_items}
-        slots_items: Dict[EquipmentSlot, List[ItemDetails]] = {}
+        slots_items: Dict[EquipmentSlot, List[Item]] = {}
         slot2type = {EquipmentSlot.WEAPON: ItemType.weapon,
                      EquipmentSlot.SHIELD: ItemType.shield,
                      EquipmentSlot.HELMET: ItemType.helmet,
@@ -86,9 +87,9 @@ class NPHardEquipmentEstimator:
                 slots_items[equipment_slot] = items_for_slot
 
         if self.initial_equipment is not None:
-            for equipment_slot, item in self.initial_equipment.items():
+            for equipment_slot, items in self.initial_equipment.items():
                 assert equipment_slot in slots_items
-                slots_items[equipment_slot] = [item]
+                slots_items[equipment_slot] = [items.item]
 
 
         item_slots = list(slots_items.keys())
@@ -130,19 +131,27 @@ class NPHardEquipmentEstimator:
             for artifact, slot in zip(artifacts_set, artifacts_slots):
                 possible_optimal_equipment[slot] = items_mapping[artifact]
             #######################
+            # Make it like equipment, converts to Items
+            possible_items_equipment: Dict[EquipmentSlot, Items]= {}
+            for slot, item in possible_optimal_equipment.items():
+                if slot in [EquipmentSlot.CONSUMABLE1, EquipmentSlot.CONSUMABLE2]:
+                    count = MAX_CONSUMABLES_EQUIPPED
+                else:
+                    count = 1
+                possible_items_equipment[slot] = Items(item, count)
 
             proxy_character = ProxyCharacter(character.stats.level.level,
-                                             possible_optimal_equipment,
+                                             possible_items_equipment,
                                              world=self.world)
             fight_estimator = FightEstimator(world=self.world)
             fight_result = fight_estimator.simulate_fights(proxy_character, monster)
             # Only for testing
             if fight_result.success_rate > max_winrate:
                 max_winrate = fight_result.success_rate
-                optimal_equipment = possible_optimal_equipment
+                optimal_equipment = possible_items_equipment
                 logger.info(f"New max winrate {max_winrate}")
-                logger.info(f"New equipment {[item.name for item in possible_optimal_equipment.values()]}")
+                logger.info(f"New equipment {[item.item.code for item in possible_items_equipment.values()]}")
             if fight_result.success_rate >= self.winrate:
-                return possible_optimal_equipment
+                return possible_items_equipment
         logger.warning(f"No solution found for monster {monster.name}")
         return optimal_equipment

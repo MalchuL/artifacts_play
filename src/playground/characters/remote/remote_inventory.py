@@ -4,6 +4,7 @@ from typing import Optional, List, Dict
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
 from src.playground.characters.inventory import Inventory, EquipmentSlot
+from src.playground.constants import MAX_CONSUMABLES_EQUIPPED
 from src.playground.items.item import Item, Items
 from src.rest_api_client.api.my_characters import ActionEquipItem, ActionDeleteItem, \
     ActionUnequipItem
@@ -19,16 +20,18 @@ class RemoteInventory(Inventory):
         self.__state = char_message
 
     @property
-    def equipment(self) -> Dict[EquipmentSlot, Optional[Item]]:
+    def equipment(self) -> Dict[EquipmentSlot, Optional[Items]]:
         state = self._state
         equipment = {}
         for slot in Slot:
             item_code = getattr(state, slot.value + "_slot")
+            if slot in [Slot.consumable1, slot.consumable2]:
+                quantity = getattr(state, slot.value + "_slot_quantity")
+            else:
+                quantity = 1
             if item_code:
                 item = Item(code=item_code)
-            else:
-                item = None
-            equipment[EquipmentSlot(slot.value)] = item
+                equipment[EquipmentSlot(slot.value)] = Items(item, quantity=quantity)
         return equipment
 
     @property
@@ -76,16 +79,18 @@ class RemoteInventory(Inventory):
         return len(self._state.inventory)
 
     @char_exception_handler
-    def equip_item(self, item: Item, item_slot: EquipmentSlot):
-        equip = EquipSchema(code=item.code, slot=Slot(item_slot.value))
+    def equip_item(self, item: Item, item_slot: EquipmentSlot, count: int = 1):
+        count = min(count, MAX_CONSUMABLES_EQUIPPED)
+        equip = EquipSchema(code=item.code, slot=Slot(item_slot.value), quantity=count)
         equip_call = ActionEquipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = equip_call(equip)
         self._state = result.data.character
         logger.debug(f"Equip results: {result.data.slot}, {result.data.item}")
 
     @char_exception_handler
-    def unequip_item(self, item_slot: EquipmentSlot):
-        unequip = UnequipSchema(slot=Slot(item_slot.value))
+    def unequip_item(self, item_slot: EquipmentSlot, count: int = 1):
+        count = min(count, MAX_CONSUMABLES_EQUIPPED)
+        unequip = UnequipSchema(slot=Slot(item_slot.value), quantity=count)
         unequip_call = ActionUnequipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = unequip_call(unequip)
         self._state = result.data.character

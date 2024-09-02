@@ -31,7 +31,7 @@ class Inventory(ABC):
 
     @property
     @abstractmethod
-    def equipment(self) -> Dict[EquipmentSlot, Optional[Item]]:
+    def equipment(self) -> Dict[EquipmentSlot, Items]:
         pass
 
     @property
@@ -49,6 +49,14 @@ class Inventory(ABC):
         pass
 
     @property
+    def free_amount(self) -> int:
+        amount = self.max_inventory_amount
+        for item in self.items:
+            amount -= item.quantity
+        return amount
+
+
+    @property
     @abstractmethod
     def capacity(self) -> int:
         """
@@ -58,12 +66,12 @@ class Inventory(ABC):
         pass
 
     @abstractmethod
-    def equip_item(self, item: Item, item_slot: EquipmentSlot):
+    def equip_item(self, item: Item, item_slot: EquipmentSlot, count: int = 1):
         # Equip an item on your character.
         pass
 
     @abstractmethod
-    def unequip_item(self, item_slot: EquipmentSlot):
+    def unequip_item(self, item_slot: EquipmentSlot, count: int = 1):
         # Unequip an item on your character.
         pass
 

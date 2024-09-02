@@ -12,7 +12,7 @@ from src.playground.characters import SkillType, EquipmentSlot
 from src.playground.characters.proxy.proxy_character import ProxyCharacter
 from src.playground.constants import SKILL_MAX_LEVEL, CHARACTER_MAX_LEVEL
 from src.playground.fabric.playground_world import PlaygroundWorld
-from src.playground.items import Item
+from src.playground.items import Item, Items
 from src.playground.items.crafting import ItemDetails
 from src.playground.monsters import Monster
 from src.playground.resources import Resource
@@ -243,7 +243,7 @@ class ResourcesRoadmap:
             # 2. Check monster can be beaten by task items (which are very rare) and maybe consumables
             # 3. Search as NP hard problem
             for is_add_task_items, use_np_hard in zip([False, True, True], [False, False, True]):
-
+                # Items that can be retrieved by quests
                 if is_add_task_items:
                     for task_item_node in self._task_roadmap(level=monster.stats.level, graph=graph,
                                                              nodes_dict=nodes_dict):
@@ -261,8 +261,9 @@ class ResourcesRoadmap:
 
                 # Fast estimation
                 equipment_estimator = EquipmentEstimator(available_items, use_consumables=False)
-                optimal_equipment = equipment_estimator.optimal_vs_monster(None,
-                                                                           monster=monster)
+                optimal_equipment: Dict[
+                    EquipmentSlot, Items] = equipment_estimator.optimal_vs_monster(None,
+                                                                                   monster=monster)
                 proxy_character = ProxyCharacter(monster.stats.level,
                                                  optimal_equipment,
                                                  world=self.world)
@@ -273,10 +274,10 @@ class ResourcesRoadmap:
                                 f"monster_hp={simulation_results.result.monster_hp}<char_hp="
                                 f"{simulation_results.result.character_hp}, "
                                 f"in turns={simulation_results.result.turns}, "
-                                f"items={[value.code for value in optimal_equipment.values()]}")
+                                f"items={[value.item.code for value in optimal_equipment.values()]}")
                     break
                 else:
-                    logger.error(f"Can't found optimal equipment, current={[item.name for item in optimal_equipment.values()]}")
+                    logger.error(f"Can't found optimal equipment, current={[items.item.code for items in optimal_equipment.values()]}")
                 # Long estimation if monster hasn't been beaten with consumables
                 if simulation_results.success_rate < self.winrate:
                     logger.info(f"NP Hard Estimation, {is_add_task_items=}, {use_np_hard=}, current_winrate={simulation_results.success_rate}")
@@ -285,7 +286,7 @@ class ResourcesRoadmap:
                         initial_equipment = None
                     else:
                         # Search with consumables
-                        initial_equipment = optimal_equipment
+                        initial_equipment: Dict[EquipmentSlot, Items] = optimal_equipment
                     np_hard_estimator = NPHardEquipmentEstimator(self.world, available_items,
                                                                  use_consumables=True,
                                                                  winrate=self.winrate,
@@ -303,7 +304,7 @@ class ResourcesRoadmap:
                                     f"monster_hp={simulation_results.result.monster_hp}<char_hp="
                                     f"{simulation_results.result.character_hp}, "
                                     f"in turns={simulation_results.result.turns}, "
-                                    f"items={[value.code for value in optimal_equipment.values()]}"
+                                    f"items={[value.item.code for value in optimal_equipment.values()]}"
                                     f"consumables={simulation_results.result.spent_consumables}")
                         break
 
@@ -322,9 +323,9 @@ class ResourcesRoadmap:
                     character_info=CharacterInfo(level=monster.stats.level + 1))
                 graph.add_edge(get_code(monster_node), get_code(next_character_node))
 
-            logger.info(f"Used items={[item.name for item in optimal_equipment.values()]}")
-            for item in optimal_equipment.values():
-                item_node = NodeInfo(target_item=item)
+            logger.info(f"Used items={[items.item.code for items in optimal_equipment.values()]}")
+            for items in optimal_equipment.values():
+                item_node = NodeInfo(target_item=items.item)
                 graph.add_edge(get_code(item_node), get_code(monster_node))
 
 

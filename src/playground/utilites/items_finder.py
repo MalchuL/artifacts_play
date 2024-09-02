@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict
 
 from src.playground.bank import Bank
+from src.playground.characters import Character
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Item, Items, ItemCraftingInfoManager
 from src.playground.items.crafting import CraftingItem
@@ -13,7 +14,7 @@ class ItemFinder:
         self.world = world
 
     @staticmethod
-    def find_item_on_character(character, search_item: Item) -> Optional[Items]:
+    def find_item_on_character(character: Character, search_item: Item) -> Optional[Items]:
         assert isinstance(search_item, Item)
         character_items: List[Items] = character.inventory.items
         item2char_items: Dict[str, Items] = {items.item.code: items for items in character_items}
