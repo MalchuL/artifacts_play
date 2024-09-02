@@ -123,6 +123,7 @@ class HarvestStrategy(CharacterStrategy):
                              TaskInfo(bank_task=BankTask(deposit_all=True))]
                 return out_tasks
             x, y = character.position
+            character.wait_until_ready()
             if x != x_map or y != y_map:
                 character.move(x=x_map, y=y_map)
                 character.wait_until_ready()

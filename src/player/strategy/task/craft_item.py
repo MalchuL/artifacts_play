@@ -83,6 +83,7 @@ class CraftStrategy(CharacterStrategy):
         workshop_location = map_finder.find_building(building_type=building_type)[0]
         self.logger.info(f"Found workshop {workshop_location} for crafting {craft_schema.skill}")
         x, y = character.position
+        character.wait_until_ready()
         if x != workshop_location.x or y != workshop_location.y:
             character.move(x=workshop_location.x, y=workshop_location.y)
         character.wait_until_ready()

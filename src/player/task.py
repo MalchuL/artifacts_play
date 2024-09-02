@@ -53,13 +53,13 @@ class Monsters:
 
 @dataclass
 class MonsterTask:
-    monster: Optional[Monsters] = None
+    monsters: Optional[Monsters] = None
     items: Optional[Items] = None
     character_level: Optional[int] = None
 
     def __repr__(self):
-        if self.monster:
-            return f"MonsterTask({self.monster.monster.code}({self.monster.count}))"
+        if self.monsters:
+            return f"MonsterTask({self.monsters.monster.code}({self.monsters.count}))"
         elif self.items:
             return f"MonsterTask({self.items.item.code}({self.items.quantity}))"
         else:

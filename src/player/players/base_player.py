@@ -2,14 +2,23 @@ from abc import ABC
 from typing import Optional, List
 
 from .player import Player
+from ..strategy.player.can_complete.craft import CanCompleteCraftingTask
+from ..strategy.player.can_complete.monster import CanBeatMonster
+from ..strategy.player.can_complete.resource import CanCompleteResourceTask
+from ..strategy.strategy import Strategy
 from ..strategy.task.bank import BankStrategy
+from ..strategy.task.craft_item import CraftStrategy
 from ..strategy.task.equip_item import EquipStrategyTask
+from ..strategy.task.harvest_items import HarvestStrategy
+from ..strategy.task.monster_fight import HuntStrategy
 from ..task import TaskInfo
-from ...playground.characters import EquipmentSlot
+from ...playground.characters import EquipmentSlot, SkillType
 from ...playground.items import Items
 
 
 class BasePlayer(Player, ABC):
+    harvest_skills: List[SkillType] = []
+    crafting_skills: List[SkillType] = []
 
     def _is_player_task(self, task_info: TaskInfo) -> bool:
         if task_info.bank_task:
@@ -21,13 +30,23 @@ class BasePlayer(Player, ABC):
     def _can_complete_task(self, task: TaskInfo):
         if task.bank_task is not None:
             return True
-        if task.equip_task is not None:
+        elif task.equip_task is not None:
             return True
-        return False
+        # Is resource task, check resources and level of resources
+        elif task.resources_task is not None:
+            return CanCompleteResourceTask(self, self._world)(task)
+        elif task.monster_task is not None:
+            return CanBeatMonster(self, self._world)(task)
+        elif task.crafting_task is not None:
+            return CanCompleteCraftingTask(self, self._world, self.crafting_skills)(task)
+        else:
+            raise ValueError(f"Task is not valid, {task}, player={self.player_type}")
 
-    def _deposit_items(self, deposit_items: Optional[List[Items]] = None, deposit_gold: int = 0,
-                       withdraw_gold: int = 0, withdraw_items: Optional[List[Items]] = None,
-                       deposit_all: bool = False) -> List[TaskInfo]:
+    def _deposit_items_strategy(self, deposit_items: Optional[List[Items]] = None,
+                                deposit_gold: int = 0,
+                                withdraw_gold: int = 0,
+                                withdraw_items: Optional[List[Items]] = None,
+                                deposit_all: bool = False) -> Strategy:
         if deposit_all:
             if deposit_items is None:
                 deposit_items = []
@@ -47,8 +66,43 @@ class BasePlayer(Player, ABC):
                                      deposit_gold=deposit_gold, withdraw_items=withdraw_items,
                                      withdraw_gold=withdraw_gold)
 
-        return bank_strategy.run()
+        return bank_strategy
 
-    def _equip_items(self, items: Items, slot: Optional[EquipmentSlot]):
-        return EquipStrategyTask(player=self, world=self._world, item=items.item,
-                                 amount=items.quantity, equipment_slot=slot).run()
+    def _task_to_actions(self, task: TaskInfo) -> List[TaskInfo]:
+        if task.bank_task is not None:
+            bank_task = task.bank_task
+            strategy = self._deposit_items_strategy(deposit_items=bank_task.deposit.items,
+                                                    deposit_gold=bank_task.deposit.gold,
+                                                    withdraw_items=bank_task.withdraw.items,
+                                                    withdraw_gold=bank_task.withdraw.gold,
+                                                    deposit_all=bank_task.deposit_all)
+            return strategy.run()
+        elif task.equip_task is not None:
+            equip_task = task.equip_task
+            strategy = EquipStrategyTask(player=self, world=self._world,
+                                         item=equip_task.items.item,
+                                         amount=equip_task.items.quantity,
+                                         equipment_slot=equip_task.slot)
+            return strategy.run()
+        elif task.resources_task is not None:
+            resource_task = task.resources_task
+            strategy = HarvestStrategy(player=self, world=self._world,
+                                       items=resource_task.items,
+                                       resources=resource_task.resources,
+                                       skill_type=resource_task.skill_level,
+                                       farm_until_level=resource_task.skill_level)
+            return strategy.run()
+        elif task.monster_task is not None:
+            monster_task = task.monster_task
+            strategy = HuntStrategy(player=self, world=self._world,
+                                    items=monster_task.items,
+                                    monsters=monster_task.monsters,
+                                    farm_until_level=monster_task.character_level)
+            return strategy.run()
+        elif task.crafting_task is not None:
+            crafting_task = task.crafting_task
+            strategy = CraftStrategy(player=self, world=self._world,
+                                     items=crafting_task.items)
+            return strategy.run()
+        else:
+            raise ValueError("Task is not valid")

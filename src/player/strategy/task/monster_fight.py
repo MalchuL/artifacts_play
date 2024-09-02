@@ -109,8 +109,8 @@ class HuntStrategy(CharacterStrategy):
             if not character.inventory.is_possible_to_add_item(Item("new_item"), max_drops):
                 self.logger.info(f"Inventory is full, depositing all items")
                 if monsters:
-                    monster_task = MonsterTask(monster=Monsters(monster=monsters.monster,
-                                                                count=monsters.count - hunted_count),
+                    monster_task = MonsterTask(monsters=Monsters(monster=monsters.monster,
+                                                                 count=monsters.count - hunted_count),
                                                character_level=farm_until_level)
                 else:
                     monster_task = MonsterTask(
@@ -122,6 +122,7 @@ class HuntStrategy(CharacterStrategy):
                 return out_tasks
             # Check is correct position
             x, y = character.position
+            character.wait_until_ready()
             if x != x_map or y != y_map:
                 character.move(x=x_map, y=y_map)
                 character.wait_until_ready()

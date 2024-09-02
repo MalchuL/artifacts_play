@@ -35,6 +35,7 @@ class BankStrategy(CharacterStrategy):
         character = self.player.character
         bank_location = find_closest_position(character,
                                               map_finder.find_building(BuildingType.BANK))
+        character.wait_until_ready()
         character.move(x=bank_location.x, y=bank_location.y)
         character.wait_until_ready()
 

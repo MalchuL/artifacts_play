@@ -4,7 +4,7 @@ from typing import List, Optional
 from src.player.players.player_types import PlayerType
 from src.player.task import TaskInfo
 from src.player.task_manager import WorldTaskManager
-from src.playground.characters import Character, EquipmentSlot
+from src.playground.characters import Character
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Items
 
@@ -37,16 +37,6 @@ class Player(ABC):
     @property
     def character(self) -> Character:
         return self._character
-
-    @abstractmethod
-    def _deposit_items(self, deposit_items: Optional[List[Items]] = None, deposit_gold: int = 0,
-                       withdraw_gold: int = 0, withdraw_items: Optional[List[Items]] = None,
-                       deposit_all: bool = False):
-        pass
-
-    @abstractmethod
-    def _equip_items(self, items: Items, slot: Optional[EquipmentSlot]):
-        pass
 
     @abstractmethod
     def _do_something(self) -> TaskInfo:

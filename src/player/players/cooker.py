@@ -2,8 +2,6 @@ import random
 
 from src.player.players.base_player import BasePlayer
 from src.player.players.player_types import PlayerType
-from src.player.strategy.task.craft_item import CraftStrategy
-from src.player.strategy.task.harvest_items import HarvestStrategy
 from src.player.task import TaskInfo, ResourcesTask, Resources
 from src.playground.characters import SkillType
 from src.playground.utilites.items_finder import ItemFinder
@@ -18,30 +16,6 @@ class Cooker(BasePlayer):
     harvest_skills = [SkillType.FISHING]
     crafting_skills = [SkillType.COOKING]
 
-    def _can_complete_task(self, task: TaskInfo):
-        if super()._can_complete_task(task):
-            return True
-        # Is resource task, check resources and level of resources
-        elif task.resources_task is not None:
-            items_task = task.resources_task.items
-            if items_task is not None:
-                resources = ItemFinder(self._world).find_item_in_resources(items_task.item)
-            elif task.resources_task.resources is not None:
-                resources = [task.resources_task.resources.resource]
-            else:
-                raise ValueError(f"Task is not valid, got {task.resources_task}")
-            for resource in resources:
-                if resource.level <= self.character.stats.skills.get_skill(resource.skill).level:
-                    return True
-        elif task.crafting_task is not None:
-            craft = ItemFinder(self._world).find_item_in_crafts(task.crafting_task.items.item)
-            crafting_level = self.character.stats.skills.get_skill(craft.craft.skill).level
-            if craft.craft.skill in self.crafting_skills and craft.craft.level <= crafting_level:
-                return True
-        else:
-            raise ValueError("Task is not valid")
-
-        return False
 
     def __find_easy_resources(self):
         resources = self._world.resources.resources
@@ -63,32 +37,6 @@ class Cooker(BasePlayer):
             resources=Resources(resource=easy_resource, count=FARM_COUNT)))
         return task_info
 
-    def _task_to_actions(self, task: TaskInfo):
-        if task.bank_task is not None:
-            bank_task = task.bank_task
-            return self._deposit_items(deposit_items=bank_task.deposit.items,
-                                       deposit_gold=bank_task.deposit.gold,
-                                       withdraw_items=bank_task.withdraw.items,
-                                       withdraw_gold=bank_task.withdraw.gold,
-                                       deposit_all=bank_task.deposit_all)
-        elif task.equip_task is not None:
-            equip_task = task.equip_task
-            return self._equip_items(items=equip_task.items, slot=equip_task.slot)
-        elif task.resources_task is not None:
-            resource_task = task.resources_task
-            strategy = HarvestStrategy(player=self, world=self._world,
-                                       items=resource_task.items,
-                                       resources=resource_task.resources,
-                                       skill_type=resource_task.skill_level,
-                                       farm_until_level=resource_task.skill_level)
-            return strategy.run()
-        elif task.crafting_task is not None:
-            crafting_task = task.crafting_task
-            strategy = CraftStrategy(player=self, world=self._world,
-                                     items=crafting_task.items)
-            return strategy.run()
-        else:
-            raise ValueError("Task is not valid")
 
     def _is_player_task(self, task: TaskInfo):
         if super()._is_player_task(task):

@@ -43,7 +43,7 @@ if __name__ == '__main__':
     player_creator = Creator(character_creator, world, world_tasks)
 
     dagger_task_info = TaskInfo(equip_task=EquipTask(Items(Item("copper_dagger"), quantity=1)))
-    world_tasks.add_task(dagger_task_info, player=player_barbarian)
+    world_tasks.add_task(dagger_task_info, player=player_creator)
     world_tasks.add_task(
         items_to_player_task(Items(Item("yellow_slimeball"), quantity=30), world=world))
 
