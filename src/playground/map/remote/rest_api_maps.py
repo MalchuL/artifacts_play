@@ -1,11 +1,15 @@
 import logging
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Tuple, Union
 
-from src.playground.map.map import Map, MapContent, MapType
+from src.playground.map.map import Map, MapContent, MapType, Event
 from src.playground.map.map_manager import MapManager
+from src.rest_api_client.api.events import GetAllEvents
 from src.rest_api_client.api.maps import GetAllMaps
 from src.rest_api_client.client import AuthenticatedClient
-from src.rest_api_client.model import MapSchema, DataPageMapSchema
+from src.rest_api_client.model import MapSchema, DataPageMapSchema, ActiveEventSchema, \
+    DataPageActiveEventSchema
+from dateutil.parser import parse as datetime_parser
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +26,12 @@ class RestApiMapManager(MapManager):
             self._maps = self.__pull_state()
 
     @staticmethod
+    def __convert_datetime(date_time: Union[str, datetime]):
+        if isinstance(date_time, str):
+            date_time = datetime_parser(date_time)
+        return date_time.astimezone(timezone.utc)
+
+    @staticmethod
     def __parse_map(state: MapSchema) -> Map:
         map_content = None
         if state.content is not None:
@@ -33,16 +43,29 @@ class RestApiMapManager(MapManager):
                    y=state.y,
                    content=map_content)
 
+    def __parse_event(self, event: ActiveEventSchema) -> Event:
+        map_schema = event.map
+        return Event(event_name=event.name,
+                     map=Map(name=map_schema.name,
+                             skin=map_schema.skin,
+                             x=map_schema.x,
+                             y=map_schema.y,
+                             content=MapContent(code=map_schema.content.code,
+                                                type=MapType(map_schema.content.type))),
+                     expiration=self.__convert_datetime(event.expiration),
+                     previous_skin=event.previous_skin)
+
+
     def __pull_state(self) -> Dict[Tuple[int, int], Map]:
-        date_page_resources: DataPageMapSchema = GetAllMaps(page=1, client=self._client)()
-        total_pages = date_page_resources.pages
-        schemas: List[MapSchema] = list(date_page_resources.data)
+        date_page_maps: DataPageMapSchema = GetAllMaps(page=1, client=self._client)()
+        total_pages = date_page_maps.pages
+        schemas: List[MapSchema] = list(date_page_maps.data)
 
         for page in range(2, total_pages + 1):
-            date_page_resources: DataPageMapSchema = GetAllMaps(page=page, client=self._client)()
-            schemas.extend(date_page_resources.data)
+            date_page_maps: DataPageMapSchema = GetAllMaps(page=page, client=self._client)()
+            schemas.extend(date_page_maps.data)
 
-        maps = {}
+        maps: Dict[Tuple[int, int], Map] = {}
         for map_schema in schemas:
             parsed_map = self.__parse_map(map_schema)
             new_key = parsed_map.position
@@ -52,8 +75,45 @@ class RestApiMapManager(MapManager):
                     f" for object. they are equal={maps[new_key] == parsed_map}")
             maps[new_key] = parsed_map
 
+        # Set default maps to avoid keeping events
+        events = self._get_events()
+        for position, event in events.items():
+            maps[position] = Map(name=event.map.name,
+                                 skin=event.previous_skin,
+                                 x=event.map.x,
+                                 y=event.map.y,
+                                 content=None)
+
         return maps
+
+    def _get_events(self) -> Dict[Tuple[int, int], Event]:
+        date_page_maps: DataPageActiveEventSchema = GetAllEvents(page=1, client=self._client)()
+        total_pages = date_page_maps.pages
+        schemas: List[ActiveEventSchema] = list(date_page_maps.data)
+
+        for page in range(2, total_pages + 1):
+            date_page_maps: DataPageActiveEventSchema = GetAllEvents(page=page, client=self._client)()
+            schemas.extend(date_page_maps.data)
+
+        events = {}
+        for event_schema in schemas:
+            parsed_event = self.__parse_event(event_schema)
+            new_key = parsed_event.position
+            if new_key in events:
+                raise KeyError(
+                    f"{new_key}:{events[new_key]}\n {parsed_event} already defined"
+                    f" for object. they are equal={events[new_key] == parsed_event}")
+            events[new_key] = parsed_event
+
+        return events
 
     @property
     def maps(self) -> list[Map]:
-        return list(self._maps.values())
+        maps = self._maps.copy()
+        for position, event in self._get_events().items():
+            assert position in maps
+            maps[position] = event.map
+        return list(maps.values())
+
+    def get_events(self) -> List[Event]:
+        return list(self._get_events().values())

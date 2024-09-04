@@ -28,4 +28,4 @@ class CanBeatMonster(CanComplete):
             raise ValueError(f"No monster found, {monster_task}")
         simulator = FightEstimator(world=self.world, simulate_fights_number=self.fight_number)
         fight_result = simulator.simulate_fights(self.player.character, monster)
-        return fight_result.success_rate > self.success_rate
+        return fight_result.success_rate >= self.success_rate

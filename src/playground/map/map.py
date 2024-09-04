@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import List, Tuple, Optional
 
@@ -33,3 +34,15 @@ class Map:
     @property
     def position(self) -> Tuple[int, int]:
         return self.x, self.y
+
+
+@dataclass(frozen=True)
+class Event:
+    event_name: str
+    previous_skin: str
+    map: Optional[Map]
+    expiration: datetime
+
+    @property
+    def position(self) -> Tuple[int, int]:
+        return self.map.x, self.map.y

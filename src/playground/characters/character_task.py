@@ -36,6 +36,8 @@ class CharacterQuest(ABC):
 
     def is_task_completed(self):
         char_task = self.get_current_task()
+        if char_task is None:
+            return False
         return char_task.progress >= char_task.total
 
     @abstractmethod

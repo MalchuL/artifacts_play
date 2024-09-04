@@ -1,6 +1,5 @@
 from src.player.strategy.player.can_complete.can_complete import CanComplete
 from src.player.task import TaskInfo
-from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.utilites.items_finder import ItemFinder
 
 

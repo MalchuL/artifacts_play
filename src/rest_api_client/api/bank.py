@@ -1,6 +1,6 @@
 from typing import Union
 
-from src.rest_api_client.api.named_classes import ObjectCodeRequest
+from src.rest_api_client.api.named_classes import ObjectCodeRequest, PagedRequest
 from src.rest_api_client.errors import ArtifactsHTTPStatusError
 from src.rest_api_client.model import DataPageSimpleItemSchema, \
     SimpleItemSchema, BankResponseSchema
@@ -22,13 +22,13 @@ class GetBankDetails(SingleArtifactsRequest):
         return super().__call__(None)
 
 
-class GetBankItems(SingleArtifactsRequest):
+class GetBankItems(PagedRequest):
     """
     Get Bank Items
     Fetch all items in your bank.
     operationId: get_bank_items_my_bank_items_get
     """
-    endpoint_pattern = '/my/bank/items'
+    endpoint_pattern = '/my/bank/items?page={page}&size={page_size}'
     method_name = 'get'
     response_schema = DataPageSimpleItemSchema
     error_responses = {}
