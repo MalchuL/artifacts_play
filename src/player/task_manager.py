@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from threading import Lock
 from typing import Dict, Optional, List
@@ -6,6 +7,7 @@ import networkx as nx
 from pyvis.network import Network
 
 from src.player.task import TaskInfo
+from src.playground.items import Items, Item
 
 
 @dataclass
@@ -87,6 +89,25 @@ class WorldTaskManager:
                             node.player_id is None]
         return player_nodes
 
+    def reserved_items(self, exclude_player: Optional["Player"] = None) -> List[Items]:
+        items_count: Dict[str, int] = defaultdict(int)
+        for node in self.task_graph.nodes:
+            if exclude_player is not None and self.task_info[
+                node].player_id == exclude_player.player_id:
+                continue
+            if self.task_info[node].task_info.reserved_task is not None:
+                for items in self.task_info[node].task_info.reserved_task.reserved_items:
+                    items_count[items.item.code] += items.quantity
+        return [Items(Item(code=code), quantity=quantity) for code, quantity in
+                items_count.items()]
+
+    def reserved_item(self, item: Item, exclude_player: Optional["Player"] = None) -> Optional[
+        Items]:
+        reserved_items = self.reserved_items(exclude_player=exclude_player)
+        for items in reserved_items:
+            if items.item.code == item.code:
+                return items
+        return None
 
     def dump_graph(self):
         graph_copy = self.task_graph.copy()

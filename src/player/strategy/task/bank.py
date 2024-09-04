@@ -4,7 +4,7 @@ from typing import List, Optional
 from src.player.players.player import Player
 from src.player.strategy.character_strategy import CharacterStrategy
 from src.player.strategy.utils.position import find_closest_position
-from src.player.task import TaskInfo, items_to_player_task
+from src.player.task import TaskInfo, items_to_player_task, ReservedTask
 from src.player.task_manager import WorldTaskManager, ManagerTask
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Items
@@ -15,11 +15,13 @@ _LOCK = threading.Lock()
 
 class BankStrategy(CharacterStrategy):
 
-    def __init__(self, player: Player, world: PlaygroundWorld,
+    def __init__(self, player: Player, world: PlaygroundWorld, task_manager: WorldTaskManager,
                  deposit_items: List[Items] = None, deposit_gold=0,
                  withdraw_items: List[Items] = None, withdraw_gold=0):
 
         super().__init__(player=player, world=world)
+        self.task_manager = task_manager
+
         self.deposit_items = deposit_items
         self.deposit_gold = deposit_gold
         self.withdraw_items = withdraw_items
@@ -51,6 +53,16 @@ class BankStrategy(CharacterStrategy):
             missed_items = []
             for required_items in withdraw_items:
                 bank_items = world.bank.get_bank_item(required_items.item)
+                # Check reserved items, to avoid withdrawing important items, like gems
+                reserved_items = self.task_manager.reserved_item(required_items.item,
+                                                                 exclude_player=self.player)
+                if reserved_items and bank_items:
+                    available_quantity = max(bank_items.quantity - reserved_items.quantity, 0)
+                    if available_quantity > 0:
+                        bank_items = Items(item=required_items.item, quantity=available_quantity)
+                    else:
+                        bank_items = None
+                # If there is not enough items in bank
                 if bank_items:
                     if required_items.quantity > bank_items.quantity:
                         missed_items.append(Items(item=required_items.item,
@@ -58,7 +70,7 @@ class BankStrategy(CharacterStrategy):
                 else:
                     missed_items.append(required_items)
             if missed_items:
-                out_task_infos = []
+                out_task_infos = [TaskInfo(reserved_task=ReservedTask(withdraw_items))]
                 for items in missed_items:
                     self.logger.info(f"Missed_items in bank={missed_items}, try to gather it")
                     out_task_infos.append(items_to_player_task(items, world=self.world))

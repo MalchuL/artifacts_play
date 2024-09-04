@@ -12,7 +12,7 @@ from ..strategy.task.equip_item import EquipStrategyTask
 from ..strategy.task.harvest_items import HarvestStrategy
 from ..strategy.task.monster_fight import HuntStrategy
 from ..task import TaskInfo
-from ...playground.characters import EquipmentSlot, SkillType
+from ...playground.characters import SkillType
 from ...playground.items import Items
 
 
@@ -25,10 +25,14 @@ class BasePlayer(Player, ABC):
             return True
         elif task_info.equip_task:
             return True
+        elif task_info.reserved_task:
+            return True
         return False
 
     def _can_complete_task(self, task: TaskInfo):
         if task.bank_task is not None:
+            return True
+        elif task.reserved_task is not None:
             return True
         elif task.equip_task is not None:
             return True
@@ -62,6 +66,7 @@ class BasePlayer(Player, ABC):
                         deposit_items.append(items)
             deposit_gold = self.character.stats.gold
         bank_strategy = BankStrategy(player=self, world=self._world,
+                                     task_manager=self._world_tasks,
                                      deposit_items=deposit_items,
                                      deposit_gold=deposit_gold, withdraw_items=withdraw_items,
                                      withdraw_gold=withdraw_gold)
@@ -77,6 +82,8 @@ class BasePlayer(Player, ABC):
                                                     withdraw_gold=bank_task.withdraw.gold,
                                                     deposit_all=bank_task.deposit_all)
             return strategy.run()
+        elif task.reserved_task is not None:
+            return []
         elif task.equip_task is not None:
             equip_task = task.equip_task
             strategy = EquipStrategyTask(player=self, world=self._world,

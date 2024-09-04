@@ -110,6 +110,12 @@ class EquipTask:
     def __repr__(self):
         return f"Equip task({self.items.item.code}({self.items.quantity}))"
 
+@dataclass
+class ReservedTask:
+    reserved_items: Optional[List[Items]]
+
+    def __repr__(self):
+        return f"({self.reserved_items})"
 
 @dataclass
 class TaskInfo:
@@ -119,6 +125,7 @@ class TaskInfo:
     quest_task: Optional[QuestTask] = None
     bank_task: Optional[BankTask] = None
     equip_task: Optional[EquipTask] = None
+    reserved_task: Optional[ReservedTask] = None
 
     def __repr__(self):
         out_str = ""
@@ -134,6 +141,8 @@ class TaskInfo:
             out_str += f"Bank task: {self.bank_task};"
         if self.equip_task:
             out_str += f"Equip task: {self.equip_task};"
+        if self.reserved_task:
+            out_str += f"Reserved Items: {self.reserved_task};"
         return f"TaskInfo({out_str})"
 
 

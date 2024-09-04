@@ -1,7 +1,7 @@
 from typing import Optional, List
 
 from src.playground.characters import EquipmentSlot, Character
-from src.playground.errors import CharacterInventoryFullException
+from src.playground.errors import CharacterInventoryFullException, ItemAlreadyEquippedException
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Items, Item, ItemType
 from src.playground.items.crafting import ItemDetails
@@ -91,7 +91,10 @@ class EquipStrategyTask(CharacterStrategy):
             return out_tasks
 
         character.wait_until_ready()
-        character.inventory.equip_item(equip_item, slot, count=self.amount)
+        try:
+            character.inventory.equip_item(equip_item, slot, count=self.amount)
+        except ItemAlreadyEquippedException as e:
+            self.logger.info(f"{equip_item} is already equipped in {slot}")
         character.wait_until_ready()
         self.logger.info(f"Successfully equiped {equip_item} in {slot}")
         return []
