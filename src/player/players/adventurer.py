@@ -21,6 +21,7 @@ class Adventurer(BasePlayer):
             character.wait_until_ready()
             if character.character_quest.is_task_completed():
                 character.character_quest.complete_task()
+            character.wait_until_ready()
             quest = character.character_quest.accept_new_task()
             character.wait_until_ready()
 
@@ -42,6 +43,8 @@ class Adventurer(BasePlayer):
                     items=Items(item=item, quantity=count)))
             case _:
                 raise ValueError(f"Unknown task type: {quest.task_type}")
+
+    #
 
     def _is_player_task(self, task: TaskInfo):
         quest = self.character.character_quest.get_current_task()

@@ -19,7 +19,7 @@ class Barbarian(BasePlayer):
         current_monster = sorted_monsters[0]
         for monster in sorted_monsters:
             tmp_task_info = TaskInfo(monster_task=MonsterTask(monsters=Monsters(monster, 1)))
-            if CanBeatMonster(self, self._world)(tmp_task_info):
+            if CanBeatMonster(self.character, self._world)(tmp_task_info):
                 current_monster = monster
             else:
                 break

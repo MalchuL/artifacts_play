@@ -3,6 +3,7 @@ from typing import Optional, Dict
 from src.playground.characters import Character, FightResult, CharacterStats, CharacterQuest, \
     Inventory, Attack, Resistance, PercentDamage, EquipmentSlot, Level
 from src.playground.characters.character import HarvestResult
+from src.playground.characters.character_stats import Skills
 from src.playground.characters.proxy.proxy_inventory import ProxyInventory
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Item, Items
@@ -11,12 +12,14 @@ from src.playground.utilites.char_results import CharacterEstimator
 
 
 class ProxyCharacter(Character):
-    def __init__(self, level, equipment: Dict[EquipmentSlot, Items],
-                 world: PlaygroundWorld):
+    def __init__(self, level, equipment: Dict[EquipmentSlot, Items] = None,
+                 world: Optional[PlaygroundWorld] = None, skills: Optional[Skills] = None):
         super().__init__("proxy")
         self._level = level
         self._world = world
+        equipment = equipment or {}
         self._inventory = ProxyInventory(equipment=equipment)
+        self._skills = skills
 
     @property
     def inventory(self) -> Inventory:
@@ -95,7 +98,7 @@ class ProxyCharacter(Character):
                                                          water=dmg_water,
                                                          earth=dmg_earth),
                                # TOOO implement
-                               skills=None,
+                               skills=self._skills,
                                gold=None,
                                haste=0,
                                speed=None)

@@ -38,11 +38,11 @@ class BasePlayer(Player, ABC):
             return True
         # Is resource task, check resources and level of resources
         elif task.resources_task is not None:
-            return CanCompleteResourceTask(self, self._world)(task)
+            return CanCompleteResourceTask(self.character, self._world)(task)
         elif task.monster_task is not None:
-            return CanBeatMonster(self, self._world)(task)
+            return CanBeatMonster(self.character, self._world)(task)
         elif task.crafting_task is not None:
-            return CanCompleteCraftingTask(self, self._world, self.crafting_skills)(task)
+            return CanCompleteCraftingTask(self.character, self._world, self.crafting_skills)(task)
         else:
             raise ValueError(f"Task is not valid, {task}, player={self.player_type}")
 

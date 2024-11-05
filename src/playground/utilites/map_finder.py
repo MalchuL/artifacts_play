@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import List
 
+from black.linegen import partial
+
 from src.playground.characters import SkillType
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.map import MapType, Map
@@ -21,19 +23,20 @@ class BuildingType(Enum):
 
 
 class MapFinder:
-    def __init__(self, world: PlaygroundWorld):
+    def __init__(self, world: PlaygroundWorld, with_events: bool = True):
         self.world = world
+        self.with_events = with_events
 
     def find_monster(self, monster: Monster) -> List[Map]:
-        map_tiles = self.world.map.get_maps(map_type=MapType.MONSTER, code=monster.code)
+        map_tiles = self.world.map.get_maps(map_type=MapType.MONSTER, code=monster.code, with_events=self.with_events)
         return map_tiles
 
     def find_resource(self, resource: Resource):
-        map_tiles = self.world.map.get_maps(map_type=MapType.RESOURCE, code=resource.code)
+        map_tiles = self.world.map.get_maps(map_type=MapType.RESOURCE, code=resource.code, with_events=self.with_events)
         return map_tiles
 
     def find_building(self, building_type: BuildingType) -> List[Map]:
-        search_method = self.world.map.get_maps
+        search_method = partial(self.world.map.get_maps, with_events=self.with_events)
         if building_type == BuildingType.BANK:
             return search_method(map_type=MapType.BANK)
         elif building_type == BuildingType.GRAND_EXCHANGE:

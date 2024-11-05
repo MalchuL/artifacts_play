@@ -2,12 +2,13 @@ from abc import ABC, abstractmethod
 
 from src.player.players.player import Player
 from src.player.task import TaskInfo
+from src.playground.characters import Character
 from src.playground.fabric.playground_world import PlaygroundWorld
 
 
 class CanComplete(ABC):
-    def __init__(self, player: Player, world: PlaygroundWorld):
-        self.player = player
+    def __init__(self, character: Character, world: PlaygroundWorld):
+        self.character = character
         self.world = world
 
     @abstractmethod

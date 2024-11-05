@@ -115,5 +115,10 @@ class RestApiMapManager(MapManager):
             maps[position] = event.map
         return list(maps.values())
 
+    @property
+    def maps_without_events(self) -> List[Map]:
+        maps = self._maps.copy()
+        return list(maps.values())
+
     def get_events(self) -> List[Event]:
         return list(self._get_events().values())
