@@ -3,10 +3,10 @@ from ..model import SimpleItemSchema, GETransactionItemSchema, \
     CharacterFightResponseSchema, EquipSchema, DepositWithdrawGoldSchema, RecyclingResponseSchema, \
     TaskResponseSchema, RecyclingSchema, CraftingSchema, UnequipSchema, EquipmentResponseSchema, \
     SkillResponseSchema, GETransactionResponseSchema, \
-    TaskRewardResponseSchema, DeleteItemResponseSchema, DestinationSchema, \
+    DeleteItemResponseSchema, DestinationSchema, \
     CharacterMovementResponseSchema, BankItemTransactionResponseSchema, \
     BankGoldTransactionResponseSchema, BankExtensionTransactionResponseSchema, \
-    TaskCancelledResponseSchema
+    TaskCancelledResponseSchema, TaskTradeResponseSchema, TasksRewardResponseSchema
 
 
 class ActionMove(CharacterRequest):
@@ -39,11 +39,12 @@ class ActionEquipItem(CharacterRequest):
     response_schema = EquipmentResponseSchema
     error_responses = {404: 'Item not found.',
                        478: 'Missing item or insufficient quantity.',
-                       484: "Character can't equip more than 100 consumables in the same slot.",
+                       484: 'Character can\'t equip more than 100 consumables in the same slot.',
                        485: 'This item is already equipped.',
                        486: 'An action is already in progress by your character.',
                        491: 'Slot is not empty.',
                        496: 'Character level is insufficient.',
+                       497: 'Character inventory is full.',
                        498: 'Character not found.',
                        499: 'Character in cooldown.'}
 
@@ -333,7 +334,7 @@ class ActionCompleteTask(CharacterRequest):
     """
     endpoint_pattern = '/my/{name}/action/task/complete'
     method_name = 'post'
-    response_schema = TaskRewardResponseSchema
+    response_schema = TasksRewardResponseSchema
     error_responses = {486: 'An action is already in progress by your character.',
                        487: 'Character has no task.',
                        488: 'Character has not completed the task.',
@@ -342,19 +343,19 @@ class ActionCompleteTask(CharacterRequest):
                        499: 'Character in cooldown.',
                        598: 'Tasks Master not found on this map.'}
 
-    def __call__(self) -> TaskRewardResponseSchema:
+    def __call__(self) -> TasksRewardResponseSchema:
         return super().__call__(None)
 
 
 class ActionTaskExchange(CharacterRequest):
     """
     Action Task Exchange
-    Exchange 3 tasks coins for a random reward. Rewards are exclusive resources for crafting  items.
+    Exchange 6 tasks coins for a random reward. Rewards are exclusive items or resources.
     operationId: action_task_exchange_my__name__action_task_exchange_post
     """
     endpoint_pattern = '/my/{name}/action/task/exchange'
     method_name = 'post'
-    response_schema = TaskRewardResponseSchema
+    response_schema = TasksRewardResponseSchema
     error_responses = {478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
                        497: 'Character inventory is full.',
@@ -362,8 +363,29 @@ class ActionTaskExchange(CharacterRequest):
                        499: 'Character in cooldown.',
                        598: 'Tasks Master not found on this map.'}
 
-    def __call__(self) -> TaskRewardResponseSchema:
+    def __call__(self) -> TasksRewardResponseSchema:
         return super().__call__(None)
+
+
+class ActionTaskTrade(CharacterRequest):
+    """
+    Action Task Trade
+    Trading items with a Tasks Master.
+    operationId: action_task_trade_my__name__action_task_trade_post
+    """
+    endpoint_pattern = '/my/{name}/action/task/trade'
+    method_name = 'post'
+    response_schema = TaskTradeResponseSchema
+    error_responses = {474: 'Character does not have this task.',
+                       475: 'Character have already completed the task or are trying to trade too many items.',
+                       478: 'Missing item or insufficient quantity.',
+                       486: 'An action is already in progress by your character.',
+                       498: 'Character not found.',
+                       499: 'Character in cooldown.',
+                       598: 'Tasks Master not found on this map.'}
+
+    def __call__(self, data: SimpleItemSchema) -> TaskTradeResponseSchema:
+        return super().__call__(data)
 
 
 class ActionTaskCancel(CharacterRequest):
@@ -377,7 +399,6 @@ class ActionTaskCancel(CharacterRequest):
     response_schema = TaskCancelledResponseSchema
     error_responses = {478: 'Missing item or insufficient quantity.',
                        486: 'An action is already in progress by your character.',
-                       497: 'Character inventory is full.',
                        498: 'Character not found.',
                        499: 'Character in cooldown.',
                        598: 'Tasks Master not found on this map.'}

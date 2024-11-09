@@ -7,7 +7,7 @@ from src.playground.characters.remote.internal_message import InternalCharacterM
 from src.rest_api_client.api.my_characters import ActionAcceptNewTask, ActionCompleteTask, \
     ActionTaskExchange
 from src.rest_api_client.client import AuthenticatedClient
-from src.rest_api_client.model import CharacterSchema, TaskResponseSchema, TaskRewardResponseSchema
+from src.rest_api_client.model import CharacterSchema, TaskResponseSchema, TasksRewardResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +43,13 @@ class RemoteCharacterQuest(CharacterQuest):
 
     @char_exception_handler
     def complete_task(self):
-        result: TaskRewardResponseSchema = ActionCompleteTask(self.name, client=self._client)()
+        result: TasksRewardResponseSchema = ActionCompleteTask(self.name, client=self._client)()
         self._state = result.data.character
         logger.debug(f"Task complete {result.data.reward}")
 
     @char_exception_handler
     def exchange_tasks(self):
-        result: TaskRewardResponseSchema = ActionTaskExchange(self.name, client=self._client)()
+        result: TasksRewardResponseSchema = ActionTaskExchange(self.name, client=self._client)()
         self._state = result.data.character
         logger.debug(f"Task reward {result.data.reward}")
 

@@ -35,6 +35,8 @@ class EffectType(Enum):
     BOOST_DAMAGE_FIRE = "boost_dmg_fire"
     BOOST_DAMAGE_AIR = "boost_dmg_air"
     BOOST_DAMAGE_WATER = "boost_dmg_water"
+    # Increase inventory size
+    INVENTORY_SPACE = "inventory_space"
 
 
 @dataclass(frozen=True)
