@@ -7,7 +7,7 @@ from src.playground.characters.character_stats import Skills
 from src.playground.characters.proxy.proxy_inventory import ProxyInventory
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import Item, Items
-from src.playground.items.crafting import EffectType
+from src.playground.items.item import EffectType
 from src.playground.utilites.char_results import CharacterEstimator
 
 
@@ -84,6 +84,7 @@ class ProxyCharacter(Character):
                     case EffectType.HP:
                         hp += effect.value
         stats = CharacterStats(hp=hp,
+                               max_hp=hp,
                                level=Level(level=self._level, xp=0, max_xp=0),
                                attack=Attack(fire=attack_fire,
                                              air=attack_air,
@@ -142,4 +143,7 @@ class ProxyCharacter(Character):
         raise NotImplementedError
 
     def grand_exchange_sell_item(self, item: Item, amount: int, price: int):
+        raise NotImplementedError
+
+    def rest(self):
         raise NotImplementedError

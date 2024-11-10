@@ -1,10 +1,13 @@
 import logging
+import os
+import pickle
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Union
 
+from src.playground.constants import CACHE_FOLDER
 from src.playground.map.map import Map, MapContent, MapType, Event
 from src.playground.map.map_manager import MapManager
-from src.rest_api_client.api.events import GetAllEvents
+from src.rest_api_client.api.events import GetAllActiveEvents
 from src.rest_api_client.api.maps import GetAllMaps
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import MapSchema, DataPageMapSchema, ActiveEventSchema, \
@@ -16,14 +19,26 @@ logger = logging.getLogger(__name__)
 
 class RestApiMapManager(MapManager):
 
-    def __init__(self, client: AuthenticatedClient, pull_status=True):
+    def __init__(self, client: AuthenticatedClient, cache=True):
         super().__init__()
 
         # Hidden variables
         self._client = client
         self._maps: Optional[Dict[Tuple[int, int], Map]] = None
-        if pull_status:
-            self._maps = self.__pull_state()
+
+        if cache:
+            cache_path = os.path.join(CACHE_FOLDER, "maps_cache.pkl")
+            if os.path.exists(cache_path):
+                logger.info("Saving maps info to local")
+                with open(cache_path, 'rb') as f:
+                    self._maps = pickle.load(f)
+            else:
+                logger.info("Pulling maps info from local")
+                os.makedirs(CACHE_FOLDER, exist_ok=True)
+                self._maps = self.__pull_state()
+                with open(cache_path, 'wb') as f:
+                    pickle.dump(self._maps, f)
+
 
     @staticmethod
     def __convert_datetime(date_time: Union[str, datetime]):
@@ -87,12 +102,12 @@ class RestApiMapManager(MapManager):
         return maps
 
     def _get_events(self) -> Dict[Tuple[int, int], Event]:
-        date_page_maps: DataPageActiveEventSchema = GetAllEvents(page=1, client=self._client)()
+        date_page_maps: DataPageActiveEventSchema = GetAllActiveEvents(page=1, client=self._client)()
         total_pages = date_page_maps.pages
         schemas: List[ActiveEventSchema] = list(date_page_maps.data)
 
         for page in range(2, total_pages + 1):
-            date_page_maps: DataPageActiveEventSchema = GetAllEvents(page=page, client=self._client)()
+            date_page_maps: DataPageActiveEventSchema = GetAllActiveEvents(page=page, client=self._client)()
             schemas.extend(date_page_maps.data)
 
         events = {}

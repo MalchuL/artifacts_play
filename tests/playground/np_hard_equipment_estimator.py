@@ -7,7 +7,8 @@ from src.playground.characters import Character, RestApiCharacter
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.fabric.restapi_playground_world import RestApiPlaygroundWorld
 from src.playground.items import ItemCraftingInfoManager, RestApiItemCraftingInfoManager
-from src.playground.items.crafting import CraftingItem, EffectType
+from src.playground.items.crafting import CraftingItem
+from src.playground.items.item import EffectType
 from src.playground.monsters import DetailedMonster, RestApiMonsterManager
 from src.playground.utilites.np_hard_equipment_estimator import NPHardEquipmentEstimator
 from src.rest_api_client.client import AuthenticatedClient

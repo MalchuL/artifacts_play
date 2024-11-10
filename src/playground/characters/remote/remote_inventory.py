@@ -4,13 +4,14 @@ from typing import Optional, List, Dict
 from src.playground.characters.remote.errors import char_exception_handler
 from src.playground.characters.remote.internal_message import InternalCharacterMessage
 from src.playground.characters.inventory import Inventory, EquipmentSlot
-from src.playground.constants import MAX_CONSUMABLES_EQUIPPED
+from src.playground.constants import MAX_UTILITIES_EQUIPPED
 from src.playground.items.item import Item, Items
 from src.rest_api_client.api.my_characters import ActionEquipItem, ActionDeleteItem, \
-    ActionUnequipItem
+    ActionUnequipItem, ActionUseItem
 from src.rest_api_client.client import AuthenticatedClient
-from src.rest_api_client.model import CharacterSchema, EquipSchema, Slot, EquipmentResponseSchema, \
-    UnequipSchema, SimpleItemSchema, DeleteItemResponseSchema
+from src.rest_api_client.model import CharacterSchema, EquipSchema, ItemSlot, \
+    EquipmentResponseSchema, \
+    UnequipSchema, SimpleItemSchema, DeleteItemResponseSchema, UseItemResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +24,9 @@ class RemoteInventory(Inventory):
     def equipment(self) -> Dict[EquipmentSlot, Optional[Items]]:
         state = self._state
         equipment = {}
-        for slot in Slot:
+        for slot in ItemSlot:
             item_code = getattr(state, slot.value + "_slot")
-            if slot in [Slot.consumable1, slot.consumable2]:
+            if slot in [ItemSlot.utility1, ItemSlot.utility2]:
                 quantity = getattr(state, slot.value + "_slot_quantity")
             else:
                 quantity = 1
@@ -35,16 +36,16 @@ class RemoteInventory(Inventory):
         return equipment
 
     @property
-    def consumables_amount(self) -> Dict[EquipmentSlot, Items]:
+    def utilities_amount(self) -> Dict[EquipmentSlot, Items]:
         state = self._state
-        consumables = {}
-        for slot in [Slot.consumable1, Slot.consumable2]:
+        utilities = {}
+        for slot in [ItemSlot.utility1, ItemSlot.utility2]:
             item_code = getattr(state, slot.value + "_slot")
             quantity = getattr(state, slot.value + "_slot_quantity")
             if item_code and quantity:
                 item = Items(Item(code=item_code), quantity=quantity)
-                consumables[EquipmentSlot(slot.value)] = item
-        return consumables
+                utilities[EquipmentSlot(slot.value)] = item
+        return utilities
 
     @property
     def name(self) -> str:
@@ -80,8 +81,8 @@ class RemoteInventory(Inventory):
 
     @char_exception_handler
     def equip_item(self, item: Item, item_slot: EquipmentSlot, count: int = 1):
-        count = min(count, MAX_CONSUMABLES_EQUIPPED)
-        equip = EquipSchema(code=item.code, slot=Slot(item_slot.value), quantity=count)
+        count = min(count, MAX_UTILITIES_EQUIPPED)
+        equip = EquipSchema(code=item.code, slot=ItemSlot(item_slot.value), quantity=count)
         equip_call = ActionEquipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = equip_call(equip)
         self._state = result.data.character
@@ -89,12 +90,18 @@ class RemoteInventory(Inventory):
 
     @char_exception_handler
     def unequip_item(self, item_slot: EquipmentSlot, count: int = 1):
-        count = min(count, MAX_CONSUMABLES_EQUIPPED)
-        unequip = UnequipSchema(slot=Slot(item_slot.value), quantity=count)
+        count = min(count, MAX_UTILITIES_EQUIPPED)
+        unequip = UnequipSchema(slot=ItemSlot(item_slot.value), quantity=count)
         unequip_call = ActionUnequipItem(name=self.name, client=self._client)
         result: EquipmentResponseSchema = unequip_call(unequip)
         self._state = result.data.character
         logger.debug(f"Unequip results: {result.data.slot}, {result.data.item}")
+
+    def use_item(self, item: Item, count: int = 1):
+        use = ActionUseItem(name=self.name, client=self._client)
+        result: UseItemResponseSchema = use(SimpleItemSchema(code=item.code, quantity=count))
+        self._state = result.data.character
+        logger.debug(f"Use item results: {result.data.item}")
 
     @char_exception_handler
     def delete_item(self, item: Item, amount: int):

@@ -4,11 +4,12 @@ from typing import List, Dict
 
 from src.playground.characters import Character, EquipmentSlot
 from src.playground.characters.proxy.proxy_character import ProxyCharacter
-from src.playground.constants import MAX_CONSUMABLES_EQUIPPED
+from src.playground.constants import MAX_UTILITIES_EQUIPPED
 from src.playground.errors import NotFoundException
 from src.playground.fabric.playground_world import PlaygroundWorld
 from src.playground.items import ItemType, Items, Item
-from src.playground.items.crafting import EffectType, ItemDetails, ItemEffect
+from src.playground.items.crafting import ItemDetails
+from src.playground.items.item import EffectType, ItemEffect
 from src.playground.monsters import DetailedMonster
 from src.playground.utilites.fight_results import FightEstimator
 
@@ -22,9 +23,9 @@ class NPHardEquipmentEstimator:
     """
 
     def __init__(self, world: PlaygroundWorld, available_equipment: List[ItemDetails], initial_equipment: Dict[EquipmentSlot, Items] = None,
-                 use_consumables=True, winrate: float = 0.9, max_equipment_count=MAX_EQUIPMENT_COUNT):
+                 use_utlities=True, winrate: float = 0.9, max_equipment_count=MAX_EQUIPMENT_COUNT):
         self.available_equipment = available_equipment
-        self.use_consumables = use_consumables
+        self.use_utilities = use_utlities
         self.world = world
         self.winrate = winrate
         self.max_equipment_count = max_equipment_count
@@ -36,8 +37,8 @@ class NPHardEquipmentEstimator:
                              ItemType.body_armor,
                              ItemType.amulet, ItemType.leg_armor, ItemType.boots, ItemType.ring,
                              ItemType.artifact]
-        if self.use_consumables:
-            target_items_type.append(ItemType.consumable)
+        if self.use_utilities:
+            target_items_type.append(ItemType.utility)
         fighting_items = [item for item in self.available_equipment if
                           item.type in target_items_type]
         items_mapping = {item.code: item for item in fighting_items}
@@ -55,9 +56,9 @@ class NPHardEquipmentEstimator:
                      EquipmentSlot.ARTIFACT2: ItemType.artifact,
                      EquipmentSlot.ARTIFACT3: ItemType.artifact
                      }
-        if self.use_consumables:
-            slot2type.update({EquipmentSlot.CONSUMABLE1: ItemType.consumable,
-                              EquipmentSlot.CONSUMABLE2: ItemType.consumable})
+        if self.use_utilities:
+            slot2type.update({EquipmentSlot.UTILITY1: ItemType.utility,
+                              EquipmentSlot.UTILITY2: ItemType.utility})
         for equipment_slot, item_type in slot2type.items():
             items_for_slot = [item for item in fighting_items if item.type == item_type]
             if items_for_slot:
@@ -75,7 +76,7 @@ class NPHardEquipmentEstimator:
                         # We don't need all items
                         count_items = max(self.max_equipment_count, items_with_max_level)
                         items_for_slot = sorted(items_for_slot, key=sorting_key)[:count_items]
-                    case EquipmentSlot.CONSUMABLE1 | EquipmentSlot.CONSUMABLE2:
+                    case EquipmentSlot.UTILITY1 | EquipmentSlot.UTILITY2:
                         # Sorting by the worst items because it easy to find
                         def sorting_key(item: ItemDetails) -> int:
                             return item.level
@@ -103,21 +104,21 @@ class NPHardEquipmentEstimator:
             for slot, equip in list(possible_optimal_equipment.items()):
                 if equip is None:
                     del possible_optimal_equipment[slot]
-            # Consumables processing
-            # Continue if consumables are same
-            consumable_1 = possible_optimal_equipment.get(EquipmentSlot.CONSUMABLE1, None)
-            consumable_2 = possible_optimal_equipment.get(EquipmentSlot.CONSUMABLE2, None)
-            if consumable_1 is not None and consumable_2 is not None:
-                if consumable_1.code == consumable_2.code:
+            # Utilities processing
+            # Continue if utilities are same
+            utility1 = possible_optimal_equipment.get(EquipmentSlot.UTILITY1, None)
+            utitlity2 = possible_optimal_equipment.get(EquipmentSlot.UTILITY2, None)
+            if utility1 is not None and utitlity2 is not None:
+                if utility1.code == utitlity2.code:
                     continue
                 # If effects are same
                 effects = [effect.type for
-                            item in [consumable_1, consumable_2] for
+                            item in [utility1, utitlity2] for
                             effect in item.effects]
                 if effects.count(EffectType.RESTORE_HP) > 1:
                     continue
                 # If level different, only the same levels or last must be higher, to avoid repetition
-                if consumable_1.level > consumable_2.level:
+                if utility1.level > utitlity2.level:
                     continue
             # Artifacts processing
             artifacts_set = set()
@@ -134,8 +135,8 @@ class NPHardEquipmentEstimator:
             # Make it like equipment, converts to Items
             possible_items_equipment: Dict[EquipmentSlot, Items]= {}
             for slot, item in possible_optimal_equipment.items():
-                if slot in [EquipmentSlot.CONSUMABLE1, EquipmentSlot.CONSUMABLE2]:
-                    count = MAX_CONSUMABLES_EQUIPPED
+                if slot in [EquipmentSlot.UTILITY1, EquipmentSlot.UTILITY2]:
+                    count = MAX_UTILITIES_EQUIPPED
                 else:
                     count = 1
                 possible_items_equipment[slot] = Items(item, count)

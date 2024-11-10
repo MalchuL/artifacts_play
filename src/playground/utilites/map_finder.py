@@ -14,6 +14,7 @@ class BuildingType(Enum):
     WEAPON_CRAFTING_WORKSHOP = "weaponcrafting"
     GEAR_CRAFTING_WORKSHOP = "gearcrafting"
     JEWERLY_CRAFTING_WORKSHOP = "jewelrycrafting"
+    ALCHEMY_WORKSHOP = "alchemy"
     COOKING = "cooking"
     MINING = "mining"
     WOODCUTTING = "woodcutting"
@@ -50,9 +51,13 @@ class MapFinder:
             return search_method(map_type=MapType.WORKSHOP, code=SkillType.GEAR_CRAFTING.value)
         elif building_type == BuildingType.JEWERLY_CRAFTING_WORKSHOP:
             return search_method(map_type=MapType.WORKSHOP, code=SkillType.JEWERLY_CRAFTING.value)
+        elif building_type == BuildingType.ALCHEMY_WORKSHOP:
+            return search_method(map_type=MapType.WORKSHOP, code=SkillType.ALCHEMY.value)
         elif building_type == BuildingType.COOKING:
             return search_method(map_type=MapType.WORKSHOP, code=SkillType.COOKING.value)
         elif building_type == BuildingType.MINING:
             return search_method(map_type=MapType.WORKSHOP, code=SkillType.MINING.value)
         elif building_type == BuildingType.WOODCUTTING:
             return search_method(map_type=MapType.WORKSHOP, code=SkillType.WOODCUTTING.value)
+        else:
+            raise ValueError(f"Unknown building type: {building_type}")

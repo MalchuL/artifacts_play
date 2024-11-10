@@ -4,17 +4,16 @@ import pickle
 from typing import Dict, List, Optional
 
 from src.playground.characters.character_stats import SkillType
+from src.playground.constants import CACHE_FOLDER
 
-from src.playground.items.crafting import CraftInfo, CraftingItem, ItemEffect, EffectType
-from src.playground.items.item import Item, ItemType, Items
+from src.playground.items.crafting import CraftInfo, CraftingItem
+from src.playground.items.item import Item, ItemType, Items, EffectType, ItemEffect
 from src.playground.items.item_crafting import ItemCraftingInfoManager
 from src.rest_api_client.api.items import GetAllItems
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import DataPageItemSchema, ItemSchema
 
 logger = logging.getLogger(__name__)
-
-CACHE_FOLDER = ".artifacts_cache"
 
 
 class RestApiItemCraftingInfoManager(ItemCraftingInfoManager):

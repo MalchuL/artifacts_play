@@ -8,7 +8,7 @@ from src.playground.characters import Character, EquipmentSlot
 from src.playground.characters.character import Result, FightResult
 from src.playground.constants import MAX_FIGHTS_LENGTH, TURN_COOLDOWN
 from src.playground.fabric.playground_world import PlaygroundWorld
-from src.playground.items.crafting import EffectType
+from src.playground.items.item import EffectType
 from src.playground.monsters import DetailedMonster
 
 PERCENT_MULTIPLIER = 0.01
@@ -18,7 +18,7 @@ PERCENT_MULTIPLIER = 0.01
 class FightResultsDetailed(FightResult):
     monster_hp: int = 0
     character_hp: int = 0
-    spent_consumables: Dict[EquipmentSlot, int] = field(default_factory=dict)
+    spent_utilities: Dict[EquipmentSlot, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -65,40 +65,57 @@ class FightEstimator:
     def estimate_fight(self, character: Character, monster: DetailedMonster):
         logs = []
         character_stats = character.stats
-        character_hp = character_stats.hp
+        character_hp = character_stats.max_hp
 
         monster_stats = monster.stats
-        monster_hp = monster_stats.hp
-        consumables = copy.deepcopy(character.inventory.consumables_amount)
-        consumables_count = {slot: 0 for slot, cons in consumables.items()}
+        monster_hp = monster_stats.max_hp
+        utilities = copy.deepcopy(character.inventory.utilities_amount)
+        utilities_count = {slot: 0 for slot, cons in utilities.items()}
 
-        boost_fire = 0
-        boost_water = 0
-        boost_earth = 0
-        boost_air = 0
+        boost_dmg_fire = 0
+        boost_dmg_water = 0
+        boost_dmg_earth = 0
+        boost_dmg_air = 0
 
-        for slot, consumable in character.inventory.consumables_amount.items():
-            if consumables_count[slot] > consumables[slot].quantity:
+        boost_res_fire = 0
+        boost_res_water = 0
+        boost_res_earth = 0
+        boost_res_air = 0
+
+        for slot, utility in character.inventory.utilities_amount.items():
+            if utilities_count[slot] > utilities[slot].quantity:
                 continue
             apply = False
-            for effect in self._world.item_details.get_item(consumable.item).effects:
+            for effect in self._world.item_details.get_item(utility.item).effects:
                 if effect.type == EffectType.BOOST_HP:
                     character_hp += effect.value
                     apply = True
                 elif effect.type == EffectType.BOOST_DAMAGE_FIRE:
-                    boost_fire += effect.value
+                    boost_dmg_fire += effect.value
                     apply = True
                 elif effect.type == EffectType.BOOST_DAMAGE_AIR:
-                    boost_air += effect.value
+                    boost_dmg_air += effect.value
                     apply = True
                 elif effect.type == EffectType.BOOST_DAMAGE_WATER:
-                    boost_water += effect.value
+                    boost_dmg_water += effect.value
                     apply = True
                 elif effect.type == EffectType.BOOST_DAMAGE_EARTH:
-                    boost_earth += effect.value
+                    boost_dmg_earth += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_RESIST_FIRE:
+                    boost_res_fire += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_RESIST_AIR:
+                    boost_res_air += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_RESIST_WATER:
+                    boost_res_water += effect.value
+                    apply = True
+                elif effect.type == EffectType.BOOST_RESIST_EARTH:
+                    boost_res_earth += effect.value
                     apply = True
             if apply:
-                consumables_count[slot] += 1
+                utilities_count[slot] += 1
 
 
         max_character_hp = character_hp
@@ -113,60 +130,60 @@ class FightEstimator:
                 monster_attack_earth = self._calculate_damage(monster_stats.attack.earth, 0)
                 # Calculate resisted damage
                 monster_attack_fire -= self._calculate_resist(monster_attack_fire,
-                                                              character_stats.resistance.fire)
+                                                              character_stats.resistance.fire + boost_res_fire)
                 monster_attack_water -= self._calculate_resist(monster_attack_water,
-                                                               character_stats.resistance.water)
+                                                               character_stats.resistance.water + boost_res_water)
                 monster_attack_air -= self._calculate_resist(monster_attack_air,
-                                                             character_stats.resistance.air)
+                                                             character_stats.resistance.air + boost_res_air)
                 monster_attack_earth -= self._calculate_resist(monster_attack_earth,
-                                                               character_stats.resistance.earth)
+                                                               character_stats.resistance.earth + boost_res_earth)
                 log_string = "Turn {turn}: The monster used {elemental} attack and dealt {damage} damage."
                 # Calculate block probability
-                earth_block = self._calculate_block(character_stats.resistance.fire)
-                if not earth_block and monster_attack_fire > 0:
+                fire_block = self._calculate_block(character_stats.resistance.fire + boost_res_fire)
+                if not fire_block and monster_attack_fire > 0:
                     logs.append(log_string.format(turn=i, elemental="fire",
                                                   damage=monster_attack_fire))
                     character_hp -= monster_attack_fire
-                water_block = self._calculate_block(character_stats.resistance.water)
+                water_block = self._calculate_block(character_stats.resistance.water + boost_res_water)
                 if not water_block and monster_attack_water > 0:
                     logs.append(log_string.format(turn=i, elemental="water",
                                                   damage=monster_attack_water))
                     character_hp -= monster_attack_water
-                air_block = self._calculate_block(character_stats.resistance.air)
+                air_block = self._calculate_block(character_stats.resistance.air + boost_res_air)
                 if not air_block and monster_attack_air > 0:
                     logs.append(log_string.format(turn=i, elemental="air",
                                                   damage=monster_attack_air))
                     character_hp -= monster_attack_air
-                earth_block = self._calculate_block(character_stats.resistance.earth)
+                earth_block = self._calculate_block(character_stats.resistance.earth + boost_res_earth)
                 if not earth_block and monster_attack_earth > 0:
                     logs.append(log_string.format(turn=i, elemental="earth",
                                                   damage=monster_attack_earth))
                     character_hp -= monster_attack_earth
 
                 if character_hp <= max_character_hp // 2:
-                    for slot, consumable in character.inventory.consumables_amount.items():
-                        if consumables_count[slot] > consumables[slot].quantity:
+                    for slot, utility in character.inventory.utilities_amount.items():
+                        if utilities_count[slot] > utilities[slot].quantity:
                             continue
                         apply = False
-                        for effect in self._world.item_details.get_item(consumable.item).effects:
+                        for effect in self._world.item_details.get_item(utility.item).effects:
                             if effect.type == EffectType.RESTORE_HP:
                                 character_hp += effect.value
                                 apply = True
                         if apply:
-                            consumables_count[slot] += 1
+                            utilities_count[slot] += 1
 
                 if character_hp <= 0:
                     break
             else:
                 # Character turn
                 character_attack_fire = self._calculate_damage(character_stats.attack.fire,
-                                                               character_stats.perc_damage.fire + boost_fire)
+                                                               character_stats.perc_damage.fire + boost_dmg_fire)
                 character_attack_water = self._calculate_damage(character_stats.attack.water,
-                                                                character_stats.perc_damage.water + boost_water)
+                                                                character_stats.perc_damage.water + boost_dmg_water)
                 character_attack_air = self._calculate_damage(character_stats.attack.air,
-                                                              character_stats.perc_damage.air + boost_air)
+                                                              character_stats.perc_damage.air + boost_dmg_air)
                 character_attack_earth = self._calculate_damage(character_stats.attack.earth,
-                                                                character_stats.perc_damage.earth + boost_earth)
+                                                                character_stats.perc_damage.earth + boost_dmg_earth)
                 # Calculate resisted damage
                 character_attack_fire -= self._calculate_resist(character_attack_fire,
                                                                 monster_stats.resistance.fire)
@@ -213,5 +230,5 @@ class FightEstimator:
                                             logs=logs,
                                             cooldown=cooldown, monster_hp=monster_hp,
                                             character_hp=character_hp,
-                                            spent_consumables=consumables_count)
+                                            spent_utilities=utilities_count)
         return fight_result

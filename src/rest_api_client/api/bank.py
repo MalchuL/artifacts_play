@@ -6,7 +6,6 @@ from src.rest_api_client.model import DataPageSimpleItemSchema, \
     SimpleItemSchema, BankResponseSchema
 from src.rest_api_client.requests.single_artifacts_request import SingleArtifactsRequest
 
-
 class GetBankDetails(SingleArtifactsRequest):
     """
     Get Bank Details

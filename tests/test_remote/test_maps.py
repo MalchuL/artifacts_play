@@ -25,8 +25,8 @@ def test_maps(maps):
 
 
 def test_filtered_maps(maps):
-    code = "ogre"
-    assert len(maps.get_maps(code=code)) == 2
+    code = "rosenblood"
+    assert len(maps.get_maps(code=code)) == 1
     print(maps.get_maps(code=code))
 
 

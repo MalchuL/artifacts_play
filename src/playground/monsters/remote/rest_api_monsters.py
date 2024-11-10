@@ -29,6 +29,7 @@ class RestApiMonsterManager(MonsterManager):
         return DetailedMonster(code=state.code,
                                name=state.name,
                                stats=MonsterStats(hp=state.hp,
+                                                  max_hp=state.hp,
                                                   level=state.level,
                                                   attack=Attack(earth=state.attack_earth,
                                                                 water=state.attack_water,

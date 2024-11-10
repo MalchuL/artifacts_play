@@ -12,6 +12,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT = 3
 
 class ArtifactsRequest(HTTPRequest):
     default_headers = {"Content-Type": "application/json",
@@ -47,6 +48,7 @@ class ArtifactsRequest(HTTPRequest):
                     url = self.get_endpoint()
                     response = client.get_httpx_client().request(method=method, url=url,
                                                                  headers=self.get_headers(),
+                                                                 timeout=DEFAULT_TIMEOUT,
                                                                  json=json_data)
                     break
             except httpx.ConnectError as e:

@@ -123,12 +123,6 @@ class Character(ABC):
         pass
 
     @abstractmethod
-    def grand_exchange_buy_item(self, item: Item, amount: int, price: int):
-        # Buy an item at the Grand Exchange on the character's map.
-        pass
-
-    @abstractmethod
-    def grand_exchange_sell_item(self, item: Item, amount: int, price: int):
-        # Sell an item at the Grand Exchange on the character's map.
+    def rest(self):
         pass
 

@@ -5,7 +5,7 @@ for openapi you should generate schema file
 # Generate pydantic classes
 
 You can find openapi specifications here https://api.artifactsmmo.com/docs/#/
-`datamodel-codegen --input openapi_schema.json --input-file-type openapi --output model.py`
+`datamodel-codegen --input .stuff/openapiv3.yaml --input-file-type openapi --output src/rest_api_client/model.py`
 !! Replace all `regex` occurrences to `pattern` !!!
 
 And if you are using PyCharm, install pydantic plugin https://plugins.jetbrains.com/plugin/12861-pydantic
@@ -16,12 +16,14 @@ Generated file should be pasted into `src/playground/remote/model.py`
 You can find openapi specifications here https://api.artifactsmmo.com/docs/#/ in my example it's https://api.artifactsmmo.com/openapi.json 
 
 ```bash
-pip install openapi-python-client==0.21.2`
-openapi-python-client generate --url https://api.artifactsmmo.com/openapi.json --output-path=src/playground/remote/openapi_client --overwrite
-# (Optional) To make files more readable 
-find src/playground/remote/openapi_client -name "*" | xargs pre-commit run --files  
+python tools/generate_openapi_classes.py
 ```
 
+Create file .secrets.toml
+```toml
+[default]
+api_token="<API_TOKEN>"
+```
 
 Similar projects:
 https://spacetraders.io/

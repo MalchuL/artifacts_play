@@ -17,13 +17,14 @@ from src.playground.items.item import Item, Items
 from src.rest_api_client.api.characters import GetCharacter
 from src.rest_api_client.api.my_characters import ActionMove, ActionFight, ActionGathering, \
     ActionDepositBank, ActionCrafting, ActionDepositBankGold, ActionRecycling, \
-    ActionWithdrawBank, ActionWithdrawBankGold, ActionGeBuyItem, ActionGeSellItem
+    ActionWithdrawBank, ActionWithdrawBankGold, ActionRest
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import CharacterSchema, CharacterMovementResponseSchema, \
     DestinationSchema, CharacterFightResponseSchema, SkillResponseSchema, SimpleItemSchema, \
     CraftingSchema, DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
-    GETransactionResponseSchema, GETransactionItemSchema, Result as ResultSchema, \
-    BankItemTransactionResponseSchema, BankGoldTransactionResponseSchema
+    GETransactionResponseSchema, FightResult as ResultSchema, \
+    BankItemTransactionResponseSchema, BankGoldTransactionResponseSchema, \
+    CharacterRestResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,7 @@ class RestApiCharacter(Character):
     def stats(self) -> CharacterStats:
         state = self._state
         return CharacterStats(hp=state.hp,
+                              max_hp=state.max_hp,
                               gold=state.gold,
                               speed=state.speed,
                               haste=state.haste,
@@ -123,7 +125,11 @@ class RestApiCharacter(Character):
                                             jewelrycrafting=SkillLevel(
                                                 level=state.jewelrycrafting_level,
                                                 xp=state.jewelrycrafting_xp,
-                                                max_xp=state.jewelrycrafting_max_xp)))
+                                                max_xp=state.jewelrycrafting_max_xp),
+                                            alchemy=SkillLevel(
+                                                level=state.alchemy_level,
+                                                xp=state.alchemy_xp,
+                                                max_xp=state.alchemy_max_xp)))
 
     def is_busy(self) -> bool:
         return self._state.cooldown_expiration >= self._get_current_time()
@@ -166,6 +172,11 @@ class RestApiCharacter(Character):
                                    cooldown=result.data.cooldown.total_seconds,
                                    logs=fight.logs)
         return fight_result
+
+    def rest(self):
+        result: CharacterRestResponseSchema = ActionRest(name=self.name, client=self._client)()
+        self._state = result.data.character
+        logger.debug(f"Rest results {str(result.data.hp_restored)}")
 
     @char_exception_handler
     def harvest(self) -> HarvestResult:
@@ -228,20 +239,3 @@ class RestApiCharacter(Character):
         self._state = result.data.character
         logger.debug(f"Withdraw gold={simple_gold_schema} from bank {result.data.bank}")
 
-    @char_exception_handler
-    def grand_exchange_buy_item(self, item: Item, amount: int, price: int):
-        transaction_schema = GETransactionItemSchema(code=item.code, quantity=amount, price=price)
-        grand_exchange_buy_call = ActionGeBuyItem(name=self.name, client=self._client)
-        result: GETransactionResponseSchema = grand_exchange_buy_call(transaction_schema)
-        self._state = result.data.character
-        logger.debug(
-            f"Buy items={transaction_schema} from Grand Exchange {result.data.transaction}")
-
-    @char_exception_handler
-    def grand_exchange_sell_item(self, item: Item, amount: int, price: int):
-        transaction_schema = GETransactionItemSchema(code=item.code, quantity=amount, price=price)
-        grand_exchange_sell_call = ActionGeSellItem(name=self.name, client=self._client)
-        result: GETransactionResponseSchema = grand_exchange_sell_call(transaction_schema)
-        self._state = result.data.character
-        logger.debug(
-            f"Sell items={transaction_schema} from Grand Exchange {result.data.transaction}")

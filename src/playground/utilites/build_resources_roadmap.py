@@ -239,8 +239,8 @@ class ResourcesRoadmap:
             logger.info("-" * 20)
             logger.info(f"Try to find optimal with monster: {monster.name}")
 
-            # 1. Check monster can be beaten by optimal equipment and maybe consumables
-            # 2. Check monster can be beaten by task items (which are very rare) and maybe consumables
+            # 1. Check monster can be beaten by optimal equipment and maybe utilities
+            # 2. Check monster can be beaten by task items (which are very rare) and maybe utilities
             # 3. Search as NP hard problem
             for is_add_task_items, use_np_hard in zip([False, True, True], [False, False, True]):
                 # Items that can be retrieved by quests
@@ -260,7 +260,7 @@ class ResourcesRoadmap:
                     node_info in available_nodes if nodes_dict[node_info].target_item is not None]
 
                 # Fast estimation
-                equipment_estimator = EquipmentEstimator(available_items, use_consumables=False)
+                equipment_estimator = EquipmentEstimator(available_items, use_utilities=False)
                 optimal_equipment: Dict[
                     EquipmentSlot, Items] = equipment_estimator.optimal_vs_monster(None,
                                                                                    monster=monster)
@@ -278,17 +278,17 @@ class ResourcesRoadmap:
                     break
                 else:
                     logger.error(f"Can't found optimal equipment, current={[items.item.code for items in optimal_equipment.values()]}")
-                # Long estimation if monster hasn't been beaten with consumables
+                # Long estimation if monster hasn't been beaten with utilities
                 if simulation_results.success_rate < self.winrate:
                     logger.info(f"NP Hard Estimation, {is_add_task_items=}, {use_np_hard=}, current_winrate={simulation_results.success_rate}")
                     if use_np_hard:
                         # Search with all equipment
                         initial_equipment = None
                     else:
-                        # Search with consumables
+                        # Search with utilities
                         initial_equipment: Dict[EquipmentSlot, Items] = optimal_equipment
                     np_hard_estimator = NPHardEquipmentEstimator(self.world, available_items,
-                                                                 use_consumables=True,
+                                                                 use_utlities=True,
                                                                  winrate=self.winrate,
                                                                  initial_equipment=initial_equipment,
                                                                  max_equipment_count=1)
@@ -299,13 +299,13 @@ class ResourcesRoadmap:
                                                      world=self.world)
                     simulation_results = fight_estimator.simulate_fights(proxy_character, monster)
                     if simulation_results.success_rate >= self.winrate:
-                        logger.info(f"monster={monster.name}:{monster.stats.level} has winrate "
+                        logger.debug(f"monster={monster.name}:{monster.stats.level} has winrate "
                                     f"{simulation_results.success_rate}. At the final "
                                     f"monster_hp={simulation_results.result.monster_hp}<char_hp="
                                     f"{simulation_results.result.character_hp}, "
                                     f"in turns={simulation_results.result.turns}, "
                                     f"items={[value.item.code for value in optimal_equipment.values()]}"
-                                    f"consumables={simulation_results.result.spent_consumables}")
+                                    f"utilities={simulation_results.result.spent_utilities}")
                         break
 
             assert simulation_results.success_rate >= self.winrate, \
@@ -323,7 +323,6 @@ class ResourcesRoadmap:
                     character_info=CharacterInfo(level=monster.stats.level + 1))
                 graph.add_edge(get_code(monster_node), get_code(next_character_node))
 
-            logger.info(f"Used items={[items.item.code for items in optimal_equipment.values()]}")
             for items in optimal_equipment.values():
                 item_node = NodeInfo(target_item=items.item)
                 graph.add_edge(get_code(item_node), get_code(monster_node))
@@ -340,7 +339,7 @@ class ResourcesRoadmap:
                     remaining_nodes.append(get_code(drop_node))
                     nodes_dict[get_code(drop_node)] = drop_node
 
-            logger.info(f"Finish with monster: {monster}")
+            logger.info(f"Finish with monster: {monster}, optimal equipment {[items.item.code for items in optimal_equipment.values()]}")
             logger.info("-" * 20)
 
 

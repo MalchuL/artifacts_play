@@ -33,8 +33,8 @@ if __name__ == '__main__':
     char_name = args.character or settings.CHARACTERS[0]
     client = AuthenticatedClient(base_url=settings.API_HOST, token=settings.API_TOKEN)
     world: PlaygroundWorld = RestApiPlaygroundWorld(client)
-    character_cooker = world.get_character("DoraDura")
-    character_fighter = world.get_character("TestChar")
+    character_cooker = world.get_character("AssetManager")
+    character_fighter = world.get_character("Kakish")
     #character_creator = world.get_character("AssetManager")
 
     world_tasks = WorldTaskManager()

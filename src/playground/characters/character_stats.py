@@ -48,6 +48,7 @@ class SkillType(Enum):
     WEAPON_CRAFTING = "weaponcrafting"
     GEAR_CRAFTING = "gearcrafting"
     JEWERLY_CRAFTING = "jewelrycrafting"
+    ALCHEMY = "alchemy"
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class Skills:
     weaponcrafting: SkillLevel
     gearcrafting: SkillLevel
     jewelrycrafting: SkillLevel
+    alchemy: SkillLevel
 
     def get_skill(self, skill_type: SkillType) -> SkillLevel:
         match skill_type:
@@ -76,6 +78,8 @@ class Skills:
                 return self.gearcrafting
             case SkillType.JEWERLY_CRAFTING:
                 return self.jewelrycrafting
+            case SkillType.ALCHEMY:
+                return self.alchemy
             case _:
                 raise ValueError(f"Unknown skill type {skill_type}")
 
@@ -83,6 +87,7 @@ class Skills:
 @dataclass(frozen=True)
 class Stats:
     hp: int
+    max_hp: int
     attack: Attack
     resistance: Resistance
 

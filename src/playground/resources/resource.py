@@ -15,4 +15,5 @@ class Resource:
     drops: List[DropItem]
 
     def __post_init__(self):
-        assert self.skill in [SkillType.MINING, SkillType.WOODCUTTING, SkillType.FISHING], self.skill.value
+        assert self.skill in [SkillType.MINING, SkillType.WOODCUTTING, SkillType.FISHING,
+                              SkillType.ALCHEMY], self.skill.value

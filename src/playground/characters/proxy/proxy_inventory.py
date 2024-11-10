@@ -18,13 +18,13 @@ class ProxyInventory(Inventory):
         return self._equipment
 
     @property
-    def consumables_amount(self) -> Dict[EquipmentSlot, Items]:
-        consumables = {}
+    def utilities_amount(self) -> Dict[EquipmentSlot, Items]:
+        utilities = {}
         equipment = self.equipment
-        for slot in [EquipmentSlot.CONSUMABLE1, EquipmentSlot.CONSUMABLE2]:
+        for slot in [EquipmentSlot.UTILITY1, EquipmentSlot.UTILITY2]:
             if slot in equipment:
-                consumables[slot] = equipment[slot]
-        return consumables
+                utilities[slot] = equipment[slot]
+        return utilities
 
     @property
     def max_inventory_amount(self) -> int:
@@ -41,4 +41,7 @@ class ProxyInventory(Inventory):
         raise NotImplementedError
 
     def delete_item(self, item: Item, amount: int):
+        raise NotImplementedError
+
+    def use_item(self, item: Item, count: int=1):
         raise NotImplementedError

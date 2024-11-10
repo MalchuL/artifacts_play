@@ -18,8 +18,8 @@ class EquipmentSlot(Enum):
     ARTIFACT1 = "artifact1"
     ARTIFACT2 = "artifact2"
     ARTIFACT3 = "artifact3"
-    CONSUMABLE1 = "consumable1"
-    CONSUMABLE2 = "consumable2"
+    UTILITY1 = "utility1"
+    UTILITY2 = "utility2"
 
 
 class Inventory(ABC):
@@ -36,7 +36,7 @@ class Inventory(ABC):
 
     @property
     @abstractmethod
-    def consumables_amount(self) -> Dict[EquipmentSlot, Items]:
+    def utilities_amount(self) -> Dict[EquipmentSlot, Items]:
         pass
 
     @property
@@ -73,6 +73,10 @@ class Inventory(ABC):
     @abstractmethod
     def unequip_item(self, item_slot: EquipmentSlot, count: int = 1):
         # Unequip an item on your character.
+        pass
+
+    @abstractmethod
+    def use_item(self, item: Item, count: int = 1):
         pass
 
     @abstractmethod

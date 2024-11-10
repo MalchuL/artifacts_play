@@ -45,11 +45,11 @@ class EquipItemTask(CharacterTask):
                 slot = EquipmentSlot.ARTIFACT2
             else:
                 slot = EquipmentSlot.ARTIFACT3
-        elif item.type == ItemType.consumable:
-            if equipment.get(EquipmentSlot.CONSUMABLE1, None) is None:
-                slot = EquipmentSlot.CONSUMABLE1
+        elif item.type == ItemType.utility:
+            if equipment.get(EquipmentSlot.UTILITY1, None) is None:
+                slot = EquipmentSlot.UTILITY1
             else:
-                slot = EquipmentSlot.CONSUMABLE2
+                slot = EquipmentSlot.UTILITY2
         else:
             slot = EquipmentSlot(item.type.value)
         return slot
