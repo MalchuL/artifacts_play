@@ -36,8 +36,8 @@ class HuntStrategy(CharacterStrategy):
         self.farm_until_level = farm_until_level
 
     def run(self):
-        return self.hunt_items(self.player, items=self.items, monsters=self.monsters,
-                               farm_until_level=self.farm_until_level)
+        return self.hunt_monster_or_items(self.player, items=self.items, monsters=self.monsters,
+                                          farm_until_level=self.farm_until_level)
 
     def locate_items_position(self, character: Character, items: Items):
         world = self.world
@@ -88,8 +88,8 @@ class HuntStrategy(CharacterStrategy):
         y_map = target_map.map.y
         return (x_map, y_map), max_drops, target_map
 
-    def hunt_items(self, player: Player, items: Optional[Items] = None,
-                   monsters: Optional[Monsters] = None, farm_until_level: Optional[int] = None) -> List[TaskInfo]:
+    def hunt_monster_or_items(self, player: Player, items: Optional[Items] = None,
+                              monsters: Optional[Monsters] = None, farm_until_level: Optional[int] = None) -> List[TaskInfo]:
         character = player.character
         if items:
             (x_map, y_map), max_drops, target_map = self.locate_items_position(character, items)
@@ -126,6 +126,8 @@ class HuntStrategy(CharacterStrategy):
             if x != x_map or y != y_map:
                 character.move(x=x_map, y=y_map)
                 character.wait_until_ready()
+            character.rest()
+            character.wait_until_ready()
             fight_result = character.fight()
             character.wait_until_ready()
             # Check is conditions are met

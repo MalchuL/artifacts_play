@@ -74,7 +74,7 @@ class Player(ABC):
                             parent_task = world_tasks.add_task(out_task_info,
                                                                player=player_for_task,
                                                                depend_on=parent_task)
-                        # By any keys remove task, because it splitted or completed
+                        # By any keys remove task, because it split or completed
                         # We already reorder them
                         world_tasks.remove_task(task)
                         break
@@ -87,7 +87,5 @@ class Player(ABC):
                             is_task_assigned = True
             if not is_task_assigned:
                 smth_task = self._do_something()
-                print(smth_task)
                 assert self._is_player_task(smth_task), f"Task {smth_task} is not for {self.player_type}"
                 world_tasks.add_task(smth_task, player=self)
-                is_task_assigned = True

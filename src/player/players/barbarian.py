@@ -16,13 +16,14 @@ class Barbarian(BasePlayer):
     def __find_easy_monster(self) -> DetailedMonster:
         monsters: List[DetailedMonster] = self._world.monsters.monsters
         sorted_monsters = sorted(monsters, key=lambda m: m.stats.level)
-        current_monster = sorted_monsters[0]
+        current_monster = None
         for monster in sorted_monsters:
             tmp_task_info = TaskInfo(monster_task=MonsterTask(monsters=Monsters(monster, 1)))
             if CanBeatMonster(self.character, self._world)(tmp_task_info):
                 current_monster = monster
             else:
                 break
+        assert current_monster is not None, f"No monster found, maybe you don't equip weapon for {self.character.name}"
         return current_monster
 
     def _do_something(self):

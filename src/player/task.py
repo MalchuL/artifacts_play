@@ -12,15 +12,11 @@ from src.playground.utilites.items_finder import ItemFinder
 
 @dataclass
 class CraftingTask:
-    skill_level: Optional[int] = None
-    skill_type: Optional[SkillType] = None
     items: Optional[Items] = None
 
     def __repr__(self):
-        if self.items:
-            return f"CraftingTask({self.items.item.code}({self.items.quantity}))"
-        else:
-            return f"CraftingTask({self.skill_type}:{self.skill_level})"
+        return f"CraftingTask({self.items.item.code}({self.items.quantity}))"
+
 
 
 @dataclass
@@ -118,6 +114,11 @@ class ReservedTask:
         return f"({self.reserved_items})"
 
 @dataclass
+class NothingTask:
+    def __repr__(self):
+        return f"(Nothing task)"
+
+@dataclass
 class TaskInfo:
     crafting_task: Optional[CraftingTask] = None
     resources_task: Optional[ResourcesTask] = None
@@ -126,6 +127,7 @@ class TaskInfo:
     bank_task: Optional[BankTask] = None
     equip_task: Optional[EquipTask] = None
     reserved_task: Optional[ReservedTask] = None
+    nothing_task: Optional[NothingTask] = None
 
     def __repr__(self):
         out_str = ""
@@ -143,6 +145,8 @@ class TaskInfo:
             out_str += f"Equip task: {self.equip_task};"
         if self.reserved_task:
             out_str += f"Reserved Items: {self.reserved_task};"
+        if self.nothing_task:
+            out_str += f"Reserved Items: {self.nothing_task};"
         return f"TaskInfo({out_str})"
 
 

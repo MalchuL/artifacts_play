@@ -129,11 +129,11 @@ class HarvestStrategy(CharacterStrategy):
                 character.wait_until_ready()
             harvest_result = character.harvest()
             character.wait_until_ready()
-            # Check is conditions are met
+            # Check conditions are met
             if items is not None:
-                for fight_items in harvest_result.drops:
-                    if fight_items.item.code == items.item.code:
-                        harvested_count += fight_items.quantity
+                for harvest_items in harvest_result.drops:
+                    if harvest_items.item.code == items.item.code:
+                        harvested_count += harvest_items.quantity
                         self.logger.info(
                             f"Harvest items {items.item.code}={harvested_count}/{items.quantity}, "
                             f"harvest_result={harvest_result}")

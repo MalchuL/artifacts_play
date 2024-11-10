@@ -27,12 +27,16 @@ class BasePlayer(Player, ABC):
             return True
         elif task_info.reserved_task:
             return True
+        elif task_info.nothing_task:
+            return True
         return False
 
     def _can_complete_task(self, task: TaskInfo):
         if task.bank_task is not None:
             return True
         elif task.reserved_task is not None:
+            return True
+        elif task.nothing_task is not None:
             return True
         elif task.equip_task is not None:
             return True
@@ -83,6 +87,8 @@ class BasePlayer(Player, ABC):
                                                     deposit_all=bank_task.deposit_all)
             return strategy.run()
         elif task.reserved_task is not None:
+            return []
+        elif task.nothing_task is not None:
             return []
         elif task.equip_task is not None:
             equip_task = task.equip_task

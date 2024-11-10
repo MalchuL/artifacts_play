@@ -66,6 +66,19 @@ class EquipStrategyTask(CharacterStrategy):
                 self.logger.info(f"{equipped_item} is already equipped in {slot}")
                 return []
 
+
+
+        # Check is enough items on character
+        inventory_items = character.inventory.get_items(equip_item)
+        if inventory_items is None or inventory_items.quantity < self.amount:
+            self.logger.info(f"Failed to equip {equip_item} in {slot}, deposit all items")
+            bank_task = TaskInfo(bank_task=BankTask(deposit_all=True, withdraw=BankObject(
+                items=[Items(equip_item, quantity=self.amount)])))
+            equip_task = TaskInfo(
+                equip_task=EquipTask(items=Items(equip_item, quantity=self.amount)))
+            out_tasks = [equip_task, bank_task]
+            return out_tasks
+
         # Unequip if it possible
         try:
             character.wait_until_ready()
@@ -79,19 +92,8 @@ class EquipStrategyTask(CharacterStrategy):
             out_tasks = [equip_task, bank_task]
             return out_tasks
 
-        # Check is enough items on character
-        inventory_items = character.inventory.get_items(equip_item)
-        if inventory_items is None or inventory_items.quantity < self.amount:
-            self.logger.info(f"Failed to equip {equip_item} in {slot}, deposit all items")
-            bank_task = TaskInfo(bank_task=BankTask(deposit_all=True, withdraw=BankObject(
-                items=[Items(equip_item, quantity=self.amount)])))
-            equip_task = TaskInfo(
-                equip_task=EquipTask(items=Items(equip_item, quantity=self.amount)))
-            out_tasks = [equip_task, bank_task]
-            return out_tasks
-
-        character.wait_until_ready()
         try:
+            character.wait_until_ready()
             character.inventory.equip_item(equip_item, slot, count=self.amount)
         except ItemAlreadyEquippedException as e:
             self.logger.info(f"{equip_item} is already equipped in {slot}")

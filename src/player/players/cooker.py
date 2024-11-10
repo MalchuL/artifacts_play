@@ -15,8 +15,8 @@ FARM_COUNT = 10
 
 class Cooker(BasePlayer):
     player_type = PlayerType.COOKER
-    harvest_skills = [SkillType.FISHING]
-    crafting_skills = [SkillType.COOKING]
+    harvest_skills = [SkillType.FISHING, SkillType.ALCHEMY]
+    crafting_skills = [SkillType.COOKING, SkillType.ALCHEMY]
 
     def _do_something(self) -> TaskInfo:
         # Try to cook already prepared resources

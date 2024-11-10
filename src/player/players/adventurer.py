@@ -4,7 +4,6 @@ from src.player.task import TaskInfo, ResourcesTask, Resources, MonsterTask, Mon
 from src.playground.characters.character_task import TaskType
 from src.playground.items import Item, Items
 from src.playground.monsters import Monster
-from src.playground.resources import Resource
 from src.playground.utilites.map_finder import MapFinder, BuildingType
 
 
@@ -43,8 +42,6 @@ class Adventurer(BasePlayer):
                     items=Items(item=item, quantity=count)))
             case _:
                 raise ValueError(f"Unknown task type: {quest.task_type}")
-
-    #
 
     def _is_player_task(self, task: TaskInfo):
         quest = self.character.character_quest.get_current_task()
