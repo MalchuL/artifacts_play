@@ -1,7 +1,10 @@
 import logging
+import os
+import pickle
 from typing import Dict, List, Optional
 
 from src.playground.characters.character_stats import SkillType
+from src.playground.constants import CACHE_FOLDER
 from src.playground.items.item import Item, DropItem
 from src.playground.resources.resource import Resource
 from src.playground.resources.resources_manager import ResourceManager
@@ -11,16 +14,31 @@ from src.rest_api_client.model import ResourceSchema, DataPageResourceSchema
 
 logger = logging.getLogger(__name__)
 
+CACHE_FILENAME = "resources_cache.pkl"
 
 class RestApiResourceManager(ResourceManager):
 
-    def __init__(self, client: AuthenticatedClient, pull_status=True):
+    def __init__(self, client: AuthenticatedClient, pull_status=True, cache=True):
         super().__init__()
 
         # Hidden variables
         self._client = client
         self._resources: Optional[Dict[str, Resource]] = None
-        if pull_status:
+        if cache:
+            cache_path = os.path.join(CACHE_FOLDER, CACHE_FILENAME)
+            if os.path.exists(cache_path):
+                logger.info("Saving resources info to local")
+                with open(cache_path, 'rb') as f:
+                    self._resources = pickle.load(f)
+            else:
+                logger.info("Pulling resources info from local")
+                os.makedirs(CACHE_FOLDER, exist_ok=True)
+                self._resources = self.__pull_state()
+                with open(cache_path, 'wb') as f:
+                    pickle.dump(self._resources, f)
+
+        if pull_status and not cache:
+            logger.info("Pulling resources info from server")
             self._resources = self.__pull_state()
 
     @staticmethod

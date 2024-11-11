@@ -16,6 +16,7 @@ from dateutil.parser import parse as datetime_parser
 
 logger = logging.getLogger(__name__)
 
+CACHE_FILENAME = "maps_cache.pkl"
 
 class RestApiMapManager(MapManager):
 
@@ -27,7 +28,7 @@ class RestApiMapManager(MapManager):
         self._maps: Optional[Dict[Tuple[int, int], Map]] = None
 
         if cache:
-            cache_path = os.path.join(CACHE_FOLDER, "maps_cache.pkl")
+            cache_path = os.path.join(CACHE_FOLDER, CACHE_FILENAME)
             if os.path.exists(cache_path):
                 logger.info("Saving maps info to local")
                 with open(cache_path, 'rb') as f:
@@ -38,6 +39,8 @@ class RestApiMapManager(MapManager):
                 self._maps = self.__pull_state()
                 with open(cache_path, 'wb') as f:
                     pickle.dump(self._maps, f)
+        else:
+            self._maps = self.__pull_state()
 
 
     @staticmethod

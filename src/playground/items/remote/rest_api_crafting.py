@@ -15,6 +15,7 @@ from src.rest_api_client.model import DataPageItemSchema, ItemSchema
 
 logger = logging.getLogger(__name__)
 
+CACHE_FILENAME = "items_cache.pkl"
 
 class RestApiItemCraftingInfoManager(ItemCraftingInfoManager):
 
@@ -25,7 +26,7 @@ class RestApiItemCraftingInfoManager(ItemCraftingInfoManager):
         self._client = client
         self._items: Optional[Dict[str, CraftingItem]] = None
         if cache:
-            cache_path = os.path.join(CACHE_FOLDER, "items_cache.pkl")
+            cache_path = os.path.join(CACHE_FOLDER, CACHE_FILENAME)
             if os.path.exists(cache_path):
                 logger.info("Saving items info to local")
                 with open(cache_path, 'rb') as f:

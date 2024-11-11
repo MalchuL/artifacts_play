@@ -1,27 +1,44 @@
 import logging
+import os
+import pickle
 from typing import Dict, List, Optional
 
 from src.playground.characters.character_stats import Attack, Resistance
+from src.playground.constants import CACHE_FOLDER
 from src.playground.items.item import Item, DropItem
 from src.playground.monsters.monster import DetailedMonster, Monster, MonsterStats
 from src.playground.monsters.monster_manager import MonsterManager
-from src.rest_api_client.api.items import GetAllItems
 from src.rest_api_client.api.monsters import GetAllMonsters
 from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import MonsterSchema, DataPageMonsterSchema
 
 logger = logging.getLogger(__name__)
 
+CACHE_FILENAME = "monsters_cache.pkl"
 
 class RestApiMonsterManager(MonsterManager):
 
-    def __init__(self, client: AuthenticatedClient, pull_status=True):
+    def __init__(self, client: AuthenticatedClient, pull_status=True, cache=True):
         super().__init__()
 
         # Hidden variables
         self._client = client
         self._monsters: Optional[Dict[str, DetailedMonster]] = None
-        if pull_status:
+        if cache:
+            cache_path = os.path.join(CACHE_FOLDER, CACHE_FILENAME)
+            if os.path.exists(cache_path):
+                logger.info("Saving monsters info to local")
+                with open(cache_path, 'rb') as f:
+                    self._monsters = pickle.load(f)
+            else:
+                logger.info("Pulling monsters info from local")
+                os.makedirs(CACHE_FOLDER, exist_ok=True)
+                self._monsters = self.__pull_state()
+                with open(cache_path, 'wb') as f:
+                    pickle.dump(self._monsters, f)
+
+        if pull_status and not cache:
+            logger.info("Pulling monsters info from server")
             self._monsters = self.__pull_state()
 
     @staticmethod
@@ -50,9 +67,9 @@ class RestApiMonsterManager(MonsterManager):
         schemas: List[MonsterSchema] = list(date_page_monsters.data)
 
         for page in range(2, total_pages + 1):
-            date_page_items: DataPageMonsterSchema = GetAllMonsters(page=page,
+            date_page_monsters: DataPageMonsterSchema = GetAllMonsters(page=page,
                                                                     client=self._client)()
-            schemas.extend(date_page_items.data)
+            schemas.extend(date_page_monsters.data)
 
         monsters = {}
         for monster_schema in schemas:

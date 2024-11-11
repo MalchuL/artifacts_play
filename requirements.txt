@@ -3,6 +3,7 @@ datamodel-code-generator==0.25.9
 qpsolvers[piqp]==4.3.3
 networkx==3.3
 numpy==2.1.0
+rootutils
 pytest
 requests
 matplotlib
