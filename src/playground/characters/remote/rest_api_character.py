@@ -1,8 +1,10 @@
+import copy
 import logging
 import time
 from datetime import datetime, timezone
 from typing import Union
 
+from asyncpg.pgproto.pgproto import timedelta
 from dateutil.parser import parse as datetime_parser
 
 from src.playground.errors import CharacterInventoryFullException
@@ -22,12 +24,14 @@ from src.rest_api_client.client import AuthenticatedClient
 from src.rest_api_client.model import CharacterSchema, CharacterMovementResponseSchema, \
     DestinationSchema, CharacterFightResponseSchema, SkillResponseSchema, SimpleItemSchema, \
     CraftingSchema, DepositWithdrawGoldSchema, RecyclingSchema, RecyclingResponseSchema, \
-    GETransactionResponseSchema, FightResult as ResultSchema, \
+    FightResult as ResultSchema, \
     BankItemTransactionResponseSchema, BankGoldTransactionResponseSchema, \
     CharacterRestResponseSchema
 
 logger = logging.getLogger(__name__)
 
+
+COOLDOWN_EPS = timedelta(seconds=1)
 
 class RestApiCharacter(Character):
     def __init__(self, name, client: AuthenticatedClient, pull_status=True):
@@ -35,12 +39,11 @@ class RestApiCharacter(Character):
         self._client = client
 
         # Hidden variables
-        state = None
-        if pull_status:
-            state = self.__pull_state()
         self.__state: InternalCharacterMessage = InternalCharacterMessage(name=self.name,
                                                                           client=client,
-                                                                          char_schema=state)
+                                                                          char_schema=None)
+        if pull_status:
+            self._state = self.__pull_state()
         self.__inventory: RemoteInventory = RemoteInventory(self.__state)
         self.__char_quest: RemoteCharacterQuest = RemoteCharacterQuest(self.__state)
 
@@ -53,19 +56,28 @@ class RestApiCharacter(Character):
             date_time = datetime_parser(date_time)
         return date_time.astimezone(timezone.utc)
 
+    def __get_cooldown_expiration(self, state: CharacterSchema, use_local_cooldown=True):
+        if use_local_cooldown:
+            cooldown_datetime = self._get_current_time() + timedelta(seconds=state.cooldown)
+        else:
+            cooldown_datetime = self.__convert_datetime(state.cooldown_expiration)
+        return cooldown_datetime
+
     @property
     def _state(self) -> CharacterSchema:
         if self.__state.char_schema is None:
             char_schema = self.__pull_state()
-            self._state.state = char_schema
+            self.__state.char_schema = char_schema
         return self.__state.char_schema
 
     @_state.setter
     def _state(self, state: CharacterSchema):
         assert isinstance(state, CharacterSchema)
+        state = copy.deepcopy(state)
+        is_state_initialized = self.__state.char_schema is not None
+        state.cooldown_expiration = self.__get_cooldown_expiration(state,
+                                                                   use_local_cooldown=is_state_initialized)
         self.__state.char_schema = state
-        self.__state.char_schema.cooldown_expiration = self.__convert_datetime(
-            self.__state.char_schema.cooldown_expiration)
 
     def __pull_state(self) -> CharacterSchema:
         char_schema: CharacterSchema = GetCharacter(self.name, client=self._client)().data
