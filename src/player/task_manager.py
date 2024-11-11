@@ -38,7 +38,7 @@ class WorldTaskManager:
                 self.task_graph.add_node(manager_task.task_id)
             self.task_info[manager_task.task_id] = manager_task
             self.__task_id += 1
-        self.dump_graph()
+            self.dump_graph()
         return manager_task
 
     def parent_task(self, manager_task: ManagerTask):
@@ -55,7 +55,7 @@ class WorldTaskManager:
             manager_task.player_id = player.player_id
             # Double check to avoid double assignment
             self.task_info[manager_task.task_id].player_id = player.player_id
-        self.dump_graph()
+            self.dump_graph()
         return manager_task
 
     def _is_pending(self, task_id: str) -> bool:

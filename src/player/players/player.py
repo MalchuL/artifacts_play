@@ -88,4 +88,5 @@ class Player(ABC):
             if not is_task_assigned:
                 smth_task = self._do_something()
                 assert self._is_player_task(smth_task), f"Task {smth_task} is not for {self.player_type}"
+                assert self._can_complete_task(smth_task), f"Task {smth_task} can not be completed, but it should be for {self.character.name}"
                 world_tasks.add_task(smth_task, player=self)

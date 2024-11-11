@@ -1,6 +1,7 @@
 from src.player.players.base_player import BasePlayer
 from src.player.players.player_types import PlayerType
-from src.player.task import TaskInfo, ResourcesTask, Resources, MonsterTask, Monsters, CraftingTask
+from src.player.task import TaskInfo, ResourcesTask, Resources, MonsterTask, Monsters, \
+    CraftingTask, NothingTask
 from src.playground.characters.character_task import TaskType
 from src.playground.items import Item, Items
 from src.playground.monsters import Monster
@@ -28,20 +29,24 @@ class Adventurer(BasePlayer):
             case TaskType.RESOURCES:
                 resource = self._world.resources.get_resource_info(quest.code)
                 count = quest.total - quest.progress
-                return TaskInfo(resources_task=ResourcesTask(
+                result_task = TaskInfo(resources_task=ResourcesTask(
                     resources=Resources(resource=resource, count=count)))
             case TaskType.MONSTERS:
                 monster = Monster(quest.code)
                 count = quest.total - quest.progress
-                return TaskInfo(monster_task=MonsterTask(
+                result_task = TaskInfo(monster_task=MonsterTask(
                     monsters=Monsters(monster=monster, count=count)))
             case TaskType.CRAFTS:
                 item = Item(quest.code)
                 count = quest.total - quest.progress
-                return TaskInfo(crafting_task=CraftingTask(
+                result_task = TaskInfo(crafting_task=CraftingTask(
                     items=Items(item=item, quantity=count)))
             case _:
                 raise ValueError(f"Unknown task type: {quest.task_type}")
+        if self._can_complete_task(result_task):
+            return result_task
+        else:
+            return TaskInfo(nothing_task=NothingTask())
 
     def _is_player_task(self, task: TaskInfo):
         quest = self.character.character_quest.get_current_task()

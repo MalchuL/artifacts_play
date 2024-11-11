@@ -72,7 +72,7 @@ class HuntStrategy(CharacterStrategy):
         monster_locations = []
         locations: List[Map] = map_finder.find_monster(monster)
         detailed_monster = world.monsters.get_monster_info(monster)
-        assert locations
+        assert locations, detailed_monster
         for monster_location in locations:
             x, y = character.position
             distance = distance_location(x, y, monster_location.x, monster_location.y)

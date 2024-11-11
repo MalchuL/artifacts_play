@@ -9,7 +9,7 @@ from src.playground.utilites.map_finder import MapFinder
 
 
 class CanBeatMonster(CanComplete):
-    def __init__(self, character: Character, world: PlaygroundWorld, success_rate: float = 0.99,
+    def __init__(self, character: Character, world: PlaygroundWorld, success_rate: float = 0.95,
                  fight_number=100):
         super().__init__(character, world)
         self.success_rate = success_rate
@@ -27,9 +27,12 @@ class CanBeatMonster(CanComplete):
             monster: DetailedMonster = monsters[0]
         else:
             raise ValueError(f"No monster found, {monster_task}")
-        map_finder = MapFinder(world=self.world)
-        if not map_finder.find_monster(monster):
-            return False
+
         simulator = FightEstimator(world=self.world, simulate_fights_number=self.fight_number)
         fight_result = simulator.simulate_fights(self.character, monster)
-        return fight_result.success_rate >= self.success_rate
+
+        if fight_result.success_rate >= self.success_rate:
+            map_finder = MapFinder(world=self.world)
+            return bool(map_finder.find_monster(monster))  # If monster is in the map
+        else:
+            return False

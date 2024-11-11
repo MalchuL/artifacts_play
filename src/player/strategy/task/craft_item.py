@@ -74,6 +74,7 @@ class CraftStrategy(CharacterStrategy):
         skill2building = {SkillType.WEAPON_CRAFTING: BuildingType.WEAPON_CRAFTING_WORKSHOP,
                           SkillType.GEAR_CRAFTING: BuildingType.GEAR_CRAFTING_WORKSHOP,
                           SkillType.JEWERLY_CRAFTING: BuildingType.JEWERLY_CRAFTING_WORKSHOP,
+                          SkillType.ALCHEMY: BuildingType.ALCHEMY_WORKSHOP,
                           SkillType.COOKING: BuildingType.COOKING,
                           SkillType.WOODCUTTING: BuildingType.WOODCUTTING,
                           SkillType.MINING: BuildingType.MINING,

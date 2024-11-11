@@ -1,4 +1,5 @@
 import argparse
+import copy
 import logging
 import threading
 import time
@@ -29,19 +30,25 @@ args = parser.parse_args()
 if __name__ == '__main__':
     client = AuthenticatedClient(base_url=settings.API_HOST, token=settings.API_TOKEN)
     world: PlaygroundWorld = RestApiPlaygroundWorld(client)
+    time.sleep(1)
     character_fighter = world.get_character("Podtekatel")
-    character_cooker = world.get_character("Kakish")
-    character_harvester = world.get_character("AssetManager")
-    character_creator = world.get_character("Yaroslav")
+    time.sleep(1)
     character_adventurer = world.get_character("Sommelier")
+    time.sleep(1)
+    character_cooker = world.get_character("Kakish")
+    time.sleep(1)
+    character_harvester = world.get_character("AssetManager")
+    time.sleep(1)
+    character_creator = world.get_character("Yaroslav")
+    time.sleep(1)
 
     world_tasks = WorldTaskManager()
 
-    player_barbarian = Barbarian(character_fighter, world, world_tasks)
-    player_cooker = Cooker(character_cooker, world, world_tasks)
-    player_adventurer = Adventurer(character_adventurer, world, world_tasks)
-    player_harvester = Harvester(character_harvester, world, world_tasks)
-    player_creator = Creator(character_creator, world, world_tasks)
+    player_barbarian = Barbarian(character_fighter, copy.deepcopy(world), world_tasks)
+    player_cooker = Cooker(character_cooker, copy.deepcopy(world), world_tasks)
+    player_adventurer = Adventurer(character_adventurer, copy.deepcopy(world), world_tasks)
+    player_harvester = Harvester(character_harvester, copy.deepcopy(world), world_tasks)
+    player_creator = Creator(character_creator, copy.deepcopy(world), world_tasks)
 
 
     barbarian_equips = [TaskInfo(equip_task=EquipTask(Items(Item(item_code), quantity=1)))
@@ -50,22 +57,26 @@ if __name__ == '__main__':
                                           ]
                         ]
     for barbarian_equip in barbarian_equips:
-        world_tasks.add_task(barbarian_equip, player=player_barbarian)
+        world_tasks.add_task(barbarian_equip, player=player_adventurer)
 
 
 
     t1 = Thread(target=player_barbarian.do, daemon=True)
-    t2 = Thread(target=player_cooker.do, daemon=True)
-    t3 = Thread(target=player_adventurer.do, daemon=True)
-    t4 = Thread(target=player_harvester.do, daemon=True)
-    t5 = Thread(target=player_creator.do, daemon=True)
+    t2 = Thread(target=player_adventurer.do, daemon=True)
+    t3 = Thread(target=player_cooker.do, daemon=True)
+    t4 = Thread(target=player_creator.do, daemon=True)
+    t5 = Thread(target=player_harvester.do, daemon=True)
 
     t1.start()
+    time.sleep(1)
     t2.start()
+    time.sleep(1)
     t3.start()
+    time.sleep(1)
     t4.start()
+    time.sleep(1)
     t5.start()
-    time.sleep(3)
+    time.sleep(1)
     #t3.start()
 
     while True:
