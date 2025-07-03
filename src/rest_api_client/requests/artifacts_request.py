@@ -51,7 +51,7 @@ class ArtifactsRequest(HTTPRequest):
                                                                  timeout=DEFAULT_TIMEOUT,
                                                                  json=json_data)
                     break
-            except (httpx.ConnectError, httpx.ReadTimeout) as e:
+            except (httpx.ConnectError, httpx.ReadTimeout, httpx.ConnectTimeout) as e:
                 logger.error(
                     f"Error in sending request {dict(method=method, url=url, headers=self.get_headers(), json=json_data)}, {e}")
                 logger.error(f"Number of retries {i}/{self._retries}")
